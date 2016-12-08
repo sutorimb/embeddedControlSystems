@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="./js/coder_app.js"></script>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="./rtwreport_utils.js"></script>
+<script type="text/javascript" src="./rtwannotate.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/coder_app.css"/>
+</head>
+<body onload="srcFileOnload();">
+<pre id="code">
+<table class="code" id="codeTbl">
+<tr name="1" id="1">
+<td>1</td><td><span class="pp">#include "Final_project.h"</span></td></tr>
+<tr name="2" id="2">
+<td>2</td><td><span class="pp">#include "Final_project_private.h"</span></td></tr>
+<tr name="3" id="3">
+<td>3</td><td></td></tr>
+<tr name="4" id="4">
+<td>4</td><td><span class="kw">void</span> <a id="4c6" class="tk">adc0_config</a>(<span class="kw">void</span>)</td></tr>
+<tr name="5" id="5">
+<td>5</td><td><span class="br">{</span></td></tr>
+<tr name="6" id="6">
+<td>6</td><td>  <a id="6c3" class="tk">ADC_0</a>.<a id="6c9" class="tk">MCR</a>.<a id="6c13" class="tk">B</a>.<a id="6c15" class="tk">OWREN</a> = 1;</td></tr>
+<tr name="7" id="7">
+<td>7</td><td>  <a id="7c3" class="tk">ADC_0</a>.<a id="7c9" class="tk">MCR</a>.<a id="7c13" class="tk">B</a>.<a id="7c15" class="tk">WLSIDE</a> = 1;</td></tr>
+<tr name="8" id="8">
+<td>8</td><td>  <a id="8c3" class="tk">ADC_0</a>.<a id="8c9" class="tk">MCR</a>.<a id="8c13" class="tk">B</a>.<a id="8c15" class="tk">ADCLKSEL</a> = 1;</td></tr>
+<tr name="9" id="9">
+<td>9</td><td>  <a id="9c3" class="tk">ADC_0</a>.<a id="9c9" class="tk">MCR</a>.<a id="9c13" class="tk">B</a>.<a id="9c15" class="tk">ACKO</a> = 1;</td></tr>
+<tr name="10" id="10">
+<td>10</td><td>  <a id="10c3" class="tk">ADC_0</a>.<a id="10c9" class="tk">CTR0</a>.<a id="10c14" class="tk">B</a>.<a id="10c16" class="tk">INPLATCH</a> = 0;</td></tr>
+<tr name="11" id="11">
+<td>11</td><td>  <a id="11c3" class="tk">ADC_0</a>.<a id="11c9" class="tk">CTR0</a>.<a id="11c14" class="tk">B</a>.<a id="11c16" class="tk">OFFSHIFT</a> = 2;</td></tr>
+<tr name="12" id="12">
+<td>12</td><td>  <a id="12c3" class="tk">ADC_0</a>.<a id="12c9" class="tk">CTR0</a>.<a id="12c14" class="tk">B</a>.<a id="12c16" class="tk">INPCMP</a> = 1;</td></tr>
+<tr name="13" id="13">
+<td>13</td><td>  <a id="13c3" class="tk">ADC_0</a>.<a id="13c9" class="tk">CTR0</a>.<a id="13c14" class="tk">B</a>.<a id="13c16" class="tk">INSAMP</a> = 4;</td></tr>
+<tr name="14" id="14">
+<td>14</td><td>  <a id="14c3" class="tk">ADC_0</a>.<a id="14c9" class="tk">MCR</a>.<a id="14c13" class="tk">B</a>.<a id="14c15" class="tk">CTUEN</a> = 0;</td></tr>
+<tr name="15" id="15">
+<td>15</td><td>  <a id="15c3" class="tk">ADC_0</a>.<a id="15c9" class="tk">CTR1</a>.<a id="15c14" class="tk">B</a>.<a id="15c16" class="tk">INPLATCH</a> = 0;</td></tr>
+<tr name="16" id="16">
+<td>16</td><td>  <a id="16c3" class="tk">ADC_0</a>.<a id="16c9" class="tk">CTR1</a>.<a id="16c14" class="tk">B</a>.<a id="16c16" class="tk">INPCMP</a> = 1;</td></tr>
+<tr name="17" id="17">
+<td>17</td><td>  <a id="17c3" class="tk">ADC_0</a>.<a id="17c9" class="tk">CTR1</a>.<a id="17c14" class="tk">B</a>.<a id="17c16" class="tk">INSAMP</a> = 1;</td></tr>
+<tr name="18" id="18">
+<td>18</td><td>  <a id="18c3" class="tk">ADC_0</a>.<a id="18c9" class="tk">CTR1</a>.<a id="18c14" class="tk">B</a>.<a id="18c16" class="tk">TSENS</a> = 0;</td></tr>
+<tr name="19" id="19">
+<td>19</td><td>  <a id="19c3" class="tk">ADC_0</a>.<a id="19c9" class="tk">PSCR</a>.<a id="19c14" class="tk">B</a>.<a id="19c16" class="tk">PREVAL0</a> = 0;</td></tr>
+<tr name="20" id="20">
+<td>20</td><td>  <a id="20c3" class="tk">ADC_0</a>.<a id="20c9" class="tk">PSCR</a>.<a id="20c14" class="tk">B</a>.<a id="20c16" class="tk">PRECONV</a> = 0;</td></tr>
+<tr name="21" id="21">
+<td>21</td><td>  <span class="kw">return</span>;</td></tr>
+<tr name="22" id="22">
+<td>22</td><td><span class="br">}</span></td></tr>
+<tr name="23" id="23">
+<td>23</td><td></td></tr>
+</table>
+</pre>
+</body>
+</html>

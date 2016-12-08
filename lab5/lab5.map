@@ -1,0 +1,370 @@
+Link map of __start
+
+
+.init section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 00008c 40005800 000001a0  1 .init 	Linker Generated Symbol File 
+  00000000 00006c 40005800 000001a0  4 _rom_copy_info 	Linker Generated Symbol File 
+  0000006c 000020 4000586c 0000020c  4 _bss_init_info 	Linker Generated Symbol File 
+
+
+.init_vle section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 00000e 40005890 00000230  1 .init 	MPC55xx_init_debug.o 
+  00000000 00000e 40005890 00000230 16 usr_init 	MPC55xx_init_debug.o 
+  0000000e 000000 4000589e 0000023e  1 .init.11 	MPC55xx_init_debug.o 
+  0000000e 000002 400058a0 00000240 16 *fill*
+  00000010 000000 400058a0 00000240  1 .init 	MPC5643L_HWInit.o 
+  00000010 000000 400058a0 00000240  1 .init.252 	MPC5643L_HWInit.o 
+  00000010 000042 400058a0 00000240  1 .init 	__ppc_eabi_init.o 
+  00000010 000014 400058a0 00000240 16 __init_hardware 	__ppc_eabi_init.o 
+  00000030 000022 400058c0 00000260 16 __flush_cache 	__ppc_eabi_init.o 
+  00000052 000002 400058e4 00000284  4 *fill*
+  00000054 0000ea 400058e4 00000284  1 .init 	Runtime.PPCEABI.VS.UC.a __start.o
+  00000054 000048 400058e4 00000284  4 __start 	Runtime.PPCEABI.VS.UC.a __start.o
+  0000009c 00002c 4000592c 000002cc  2 __copy_rom_section 	Runtime.PPCEABI.VS.UC.a __start.o
+  000000c8 00001a 40005958 000002f8  2 __init_registers 	Runtime.PPCEABI.VS.UC.a __start.o
+  000000e2 00005c 40005972 00000312  2 __init_data 	Runtime.PPCEABI.VS.UC.a __start.o
+  0000013e 000000 400059ce 0000036e  1 .init.130 	Runtime.PPCEABI.VS.UC.a __start.o
+  0000013e 0000ca 400059ce 0000036e  1 .init 	Runtime.PPCEABI.VS.UC.a __mem.o
+  0000013e 000038 400059ce 0000036e  2 memcpy 	Runtime.PPCEABI.VS.UC.a __mem.o
+  00000176 000078 40005a06 000003a6  2 __fill_mem 	Runtime.PPCEABI.VS.UC.a __mem.o
+  000001ee 00001a 40005a7e 0000041e  2 memset 	Runtime.PPCEABI.VS.UC.a __mem.o
+
+
+.ivor_branch_table_p0 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 0000fe 40006000 00000800  1 .ivor_branch_table_p0 	ivor_branch_table_p0.o 
+  00000000 0000fe 40006000 00000800 16 ivor_branch_table_p0 	ivor_branch_table_p0.o 
+  000000fe 000000 400060fe 000008fe  1 .ivor_branch_table_p0.24 	ivor_branch_table_p0.o 
+
+
+.intc_hw_branch_table_p0 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.__exception_handlers_p0 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 000096 40006100 00000900  1 .__exception_handlers_p0 	IntcInterrupts_p0.o 
+  00000000 000096 40006100 00000900 16 INTC_INTCInterruptHandler 	IntcInterrupts_p0.o 
+  00000096 00000a 400061a0 000009a0 16 *fill*
+  000000a0 000002 400061a0 000009a0  1 .__exception_handlers_p0 	Exceptions.o 
+  000000a0 000002 400061a0 000009a0 16 EXCEP_DefaultExceptionHandler 	Exceptions.o 
+
+
+.intc_sw_isr_vector_table_p0 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.text section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.text_vle section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 000056 40000000 00001000  1 .text 	IntcInterrupts_p0.o 
+  00000000 00002c 40000000 00001000 16 INTC_InstallINTCInterruptHandler 	IntcInterrupts_p0.o 
+  00000030 000026 40000030 00001030 16 INTC_InitINTCInterrupts 	IntcInterrupts_p0.o 
+  00000056 00000a 40000060 00001060 16 *fill*
+  00000060 000082 40000060 00001060  1 .text 	__ppc_eabi_init.o 
+  00000060 00003e 40000060 00001060 16 FlashConfig 	__ppc_eabi_init.o 
+  000000a0 000012 400000a0 000010a0 16 __init_user 	__ppc_eabi_init.o 
+  000000c0 000014 400000c0 000010c0 16 exit 	__ppc_eabi_init.o 
+  000000e0 000002 400000e0 000010e0 16 _ExitProcess 	__ppc_eabi_init.o 
+  000000e2 00000e 400000f0 000010f0 16 *fill*
+  000000f0 000092 400000f0 000010f0  1 .text 	Exceptions.o 
+  000000f0 000092 400000f0 000010f0 16 EXCEP_InitExceptionHandlers 	Exceptions.o 
+  00000182 00000e 40000190 00001190 16 *fill*
+  00000190 0006f4 40000190 00001190  1 .text 	eecs461.o 
+  00000190 000024 40000190 00001190 16 initEECS461 	eecs461.o 
+  000001c0 00010a 400001c0 000011c0 16 preInit 	eecs461.o 
+  000002d0 0001e6 400002d0 000012d0 16 initModeEntry 	eecs461.o 
+  000004c0 00025a 400004c0 000014c0 16 initSysClk 	eecs461.o 
+  00000720 000066 40000720 00001720 16 initCMU 	eecs461.o 
+  00000790 0000f4 40000790 00001790 16 modeEntryPostConfig 	eecs461.o 
+  00000884 000000 40000884 00001884  1 .text.360 	eecs461.o 
+  00000884 00000c 40000890 00001890 16 *fill*
+  00000890 00028a 40000890 00001890  1 .text 	pwm.o 
+  00000890 0000ce 40000890 00001890 16 setPWM 	pwm.o 
+  00000960 000176 40000960 00001960 16 initPWM 	pwm.o 
+  00000ae0 00003a 40000ae0 00001ae0 16 initPCRs 	pwm.o 
+  00000b1a 000000 40000b1a 00001b1a  1 .text.282 	pwm.o 
+  00000b1a 000006 40000b20 00001b20 16 *fill*
+  00000b20 0000f6 40000b20 00001b20  1 .text 	pit.o 
+  00000b20 0000e8 40000b20 00001b20 16 initPIT 	pit.o 
+  00000c10 000006 40000c10 00001c10 16 enable_interrupts 	pit.o 
+  00000c16 000000 40000c16 00001c16  1 .text.276 	pit.o 
+  00000c16 00000a 40000c20 00001c20 16 *fill*
+  00000c20 00018e 40000c20 00001c20  1 .text 	adc.o 
+  00000c20 000098 40000c20 00001c20 16 initSIUADC0 	adc.o 
+  00000cc0 0000ee 40000cc0 00001cc0 16 initADC0_oneshot 	adc.o 
+  00000dae 000000 40000dae 00001dae  1 .text.312 	adc.o 
+  00000dae 000002 40000db0 00001db0 16 *fill*
+  00000db0 000242 40000db0 00001db0  1 .text 	lab5.o 
+  00000db0 0000d0 40000db0 00001db0 16 IsrC 	lab5.o 
+  00000e80 000172 40000e80 00001e80 16 main 	lab5.o 
+  00000ff2 000000 40000ff2 00001ff2  1 .text.769 	lab5.o 
+  00000ff2 000064 40000ff2 00001ff2  1 .text 	Runtime.PPCEABI.VS.UC.a runtime.o
+  00000ff2 00004a 40000ff2 00001ff2  2 __save_gpr 	Runtime.PPCEABI.VS.UC.a runtime.o
+  00001032 000000 40001032 00002032    _savegpr_30 (entry of __save_gpr) 	Runtime.PPCEABI.VS.UC.a runtime.o
+  0000103c 000008 4000103c 0000203c  2 __restore_frame_and_exit 	Runtime.PPCEABI.VS.UC.a runtime.o
+  0000103e 000000 4000103e 0000203e    __finish_restore_frame_and_exit2 (entry of __restore_frame_and_exit) 	Runtime.PPCEABI.VS.UC.a runtime.o
+  00001044 00000a 40001044 00002044  2 __restore_gpr_31_exit 	Runtime.PPCEABI.VS.UC.a runtime.o
+  0000104a 000000 4000104a 0000204a    __finish_restore_frame_and_exit (entry of __restore_gpr_31_exit) 	Runtime.PPCEABI.VS.UC.a runtime.o
+  0000104e 000008 4000104e 0000204e  2 __restore_gpr_30_exit 	Runtime.PPCEABI.VS.UC.a runtime.o
+  00001056 000000 40001056 00002056  1 .text.205 	Runtime.PPCEABI.VS.UC.a runtime.o
+  00001056 00000a 40001060 00002060 16 *fill*
+  00001060 000a46 40001060 00002060  1 .text 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001060 000028 40001060 00002060 16 _f_itof 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001090 000044 40001090 00002090 16 _f_qtof 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001094 000000 40001094 00002094    _d_dtof (entry of _f_qtof) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000010e0 000046 400010e0 000020e0 16 _f_ftod 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001130 000006 40001130 00002130 16 _f_ftou 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001140 000092 40001140 00002140 16 _f_ftoi 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001142 000000 40001142 00002142    f_toshortX_common (entry of _f_ftoi) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  0000115c 000000 4000115c 0000215c    Xtoshort_common (entry of _f_ftoi) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000011e0 0000c2 400011e0 000021e0 16 _d_dtoi 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000011f6 000000 400011f6 000021f6    Xtolong_common (entry of _d_dtoi) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000012b0 000156 400012b0 000022b0 16 _f_mul 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000012e2 000000 400012e2 000022e2    f_coerce_result (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000012ea 000000 400012ea 000022ea    f_coerce_result_precalculated_data (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001392 000000 40001392 00002392    f_result_is_INF (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000013e0 000000 400013e0 000023e0    f_result_is_zero (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000013ea 000000 400013ea 000023ea    f_both_NaNs (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000013ee 000000 400013ee 000023ee    f_x_is_NaN (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000013f2 000000 400013f2 000023f2    f_result_is_Invalid (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000013fc 000000 400013fc 000023fc    f_y_is_NaN (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001402 000000 40001402 00002402    f_result_is_x (entry of _f_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001410 000008 40001410 00002410 16 _f_sub 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001420 000116 40001420 00002420 16 _f_add 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001422 000000 40001422 00002422    f_add_common (entry of _f_add) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001540 00018a 40001540 00002540 16 _d_add 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000016d0 0001ee 400016d0 000026d0 16 _d_mul 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001738 000000 40001738 00002738    d_coerce_result_prepare (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  0000173c 000000 4000173c 0000273c    d_coerce_result (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001740 000000 40001740 00002740    d_coerce_result_precalculated_data (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001806 000000 40001806 00002806    d_double_result_and_exit (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001812 000000 40001812 00002812    d_result_is_INF (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001864 000000 40001864 00002864    d_result_is_zero (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001870 000000 40001870 00002870    d_both_NaNs (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001876 000000 40001876 00002876    d_x_is_NaN (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  0000187c 000000 4000187c 0000287c    d_result_is_Invalid (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001888 000000 40001888 00002888    d_y_is_NaN (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000018a4 000000 400018a4 000028a4    d_result_is_x (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000018a6 000000 400018a6 000028a6    d_result_is_number_x (entry of _d_mul) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000018c0 00009a 400018c0 000028c0 16 f_unpack_1 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  000018c8 000000 400018c8 000028c8    f_unpack_2 (entry of f_unpack_1) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001960 0000f6 40001960 00002960 16 d_unpack_1 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001968 000000 40001968 00002968    d_unpack_2 (entry of d_unpack_1) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a60 00002e 40001a60 00002a60 16 load_rounding_0x2000 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a64 000000 40001a64 00002a64    load_rounding_0x0200 (entry of load_rounding_0x2000) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a68 000000 40001a68 00002a68    load_rounding_0x1200 (entry of load_rounding_0x2000) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a6c 000000 40001a6c 00002a6c    load_rounding_0x0a00 (entry of load_rounding_0x2000) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a72 000000 40001a72 00002a72    load_rounding_cr_simple (entry of load_rounding_0x2000) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a90 000016 40001a90 00002a90 16 proloque 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00001a9a 000000 40001a9a 00002a9a    epiloque (entry of proloque) 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+
+
+.rodata section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 00000c 40001aa8 00002aa8  1 .rodata 	__ppc_eabi_init.o 
+  00000000 00000c 40001aa8 00002aa8  4 @261 	__ppc_eabi_init.o 
+  0000000c 000004 40001ab8 00002ab8  8 *fill*
+  00000010 000040 40001ab8 00002ab8  1 .rodata 	adc.o 
+  00000010 000040 40001ab8 00002ab8  8 @254 	adc.o 
+
+
+.ctors section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.dtors section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+extab section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+extabindex section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.__uninitialized_intc_handlertable section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 0004d0 40008000 00002b00  1 .__uninitialized_intc_handlertable 	IntcInterrupts_p0.o 
+  00000000 0004d0 40008000 00002b00  8 INTCInterruptsHandlerTable_p0 	IntcInterrupts_p0.o 
+
+
+.data section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 000028 400084d0 00002b00  1 .data 	lab5.o 
+  00000000 000028 400084d0 00002b00  8 sin_arr 	lab5.o 
+
+
+.sdata section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 00000c 400084f8 00002b28  1 .sdata 	lab5.o 
+  00000000 000004 400084f8 00002b28  4 pad_num_LED 	lab5.o 
+  00000004 000004 400084fc 00002b2c  4 pad_num_DIP122 	lab5.o 
+  00000008 000004 40008500 00002b30  4 pad_num_DIP123 	lab5.o 
+
+
+.sbss section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 000008 40008508 00002b38  1 .sbss 	lab5.o 
+  00000000 000001 40008508 00002b38  4 channelArray 	lab5.o 
+  00000004 000004 4000850c 00002b3c  4 k 	lab5.o 
+
+
+.sdata2 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.sbss2 section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+
+
+.bss section layout
+  Starting        Virtual  File
+  address  Size   address  offset
+  ---------------------------------
+  00000000 000004 40008510 00002b38  1 .bss 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+  00000000 000004 40008510 00002b38  4 __SoftFPSCR 	Runtime.PPCEABI.VS.UC.a C:\CVSCheckOut\eppc_support\Do_Not_Distribute\zen_fpemu\Src\vle_ppcsfpe.o
+
+
+Memory map:
+                       Starting Size     File       S-Record
+                       address           Offset     Line
+                 .init 40005800 0000008c 000001a0        348
+             .init_vle 40005890 00000208 00000230        355
+  .ivor_branch_table_p0 40006000 00000100 00000800        381
+  .__exception_handlers_p0 40006100 000000a4 00000900        394
+                 .text 40000000 00000000 00001000          0
+             .text_vle 40000000 00001aa8 00001000          2
+               .rodata 40001aa8 00000050 00002aa8        344
+                .ctors 40001af8 00000000 00002af8          0
+                .dtors 40001af8 00000000 00002af8          0
+                 extab 40001af8 00000000 00002af8          0
+            extabindex 40001af8 00000000 00002af8          0
+  .__uninitialized_intc_handlertable 40008000 000004d0 00002b00          0
+                 .data 400084d0 00000028 00002b00        403
+                .sdata 400084f8 0000000c 00002b28        405
+                 .sbss 40008508 00000008 00002b38          0
+               .sdata2 40008510 00000000 00002b38          0
+                .sbss2 40008510 00000000 00002b38          0
+                  .bss 40008510 00000004 00002b38          0
+      .PPC.EMB.apuinfo 0000546c 00000000 00007fb0          0
+         .debug_abbrev          00000129 00002b38
+           .debug_info          000014c0 00002c61
+           .debug_line          000022ac 00004121
+            .debug_loc          000005ae 000063cd
+       .debug_pubnames          00000417 0000697b
+
+
+Linker generated symbols:
+       EXCEPTION_HANDLERS 40006000
+                  _f_init 40005800
+              _f_init_rom 40005800
+                  _e_init 4000588c
+              _f_init_vle 40005890
+          _f_init_vle_rom 40005890
+              _e_init_vle 40005a98
+  _f_ivor_branch_table_p0 40006000
+_f_ivor_branch_table_p0_rom 40006000
+  _e_ivor_branch_table_p0 40006100
+_f_intc_hw_branch_table_p0 40006100
+_f_intc_hw_branch_table_p0_rom 40006800
+_e_intc_hw_branch_table_p0 40006100
+_f___exception_handlers_p0 40006100
+_f___exception_handlers_p0_rom 40006100
+_e___exception_handlers_p0 400061a4
+_f_intc_sw_isr_vector_table_p0 40000000
+_f_intc_sw_isr_vector_table_p0_rom 40000000
+_e_intc_sw_isr_vector_table_p0 40000000
+                  _f_text 40000000
+              _f_text_rom 40000000
+                  _e_text 40000000
+              _f_text_vle 40000000
+          _f_text_vle_rom 40000000
+              _e_text_vle 40001aa8
+                _f_rodata 40001aa8
+            _f_rodata_rom 40001aa8
+                _e_rodata 40001af8
+                 _f_ctors 40001af8
+             _f_ctors_rom 40001af8
+                 _e_ctors 40001af8
+                 _f_dtors 40001af8
+             _f_dtors_rom 40001af8
+                 _e_dtors 40001af8
+                  _fextab 40001af8
+              _fextab_rom 40001af8
+                  _eextab 40001af8
+             _fextabindex 40001af8
+         _fextabindex_rom 40001af8
+             _eextabindex 40001af8
+_f___uninitialized_intc_handlertable 40008000
+_e___uninitialized_intc_handlertable 400084d0
+                  _f_data 400084d0
+              _f_data_rom 400084d0
+                  _e_data 400084f8
+                 _f_sdata 400084f8
+             _f_sdata_rom 400084f8
+                 _e_sdata 40008504
+                  _f_sbss 40008508
+                  _e_sbss 40008510
+                _f_sdata2 40008510
+            _f_sdata2_rom 40008510
+                _e_sdata2 40008510
+                 _f_sbss2 40008510
+                 _e_sbss2 40008510
+                   _f_bss 40008510
+                   _e_bss 40008514
+              _stack_addr 4001d000
+               _stack_end 4001c000
+               _heap_addr 4001b000
+                _heap_end 4001c000
+             _nbfunctions 00000036
+           SIZEOF_HEADERS 000001a0
+               _SDA_BASE_ 400104f8
+              _SDA2_BASE_ 40010510
+           _ABS_SDA_BASE_ 400104f8
+          _ABS_SDA2_BASE_ 40010510

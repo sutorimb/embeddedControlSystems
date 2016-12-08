@@ -1,0 +1,2418 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="./js/coder_app.js"></script>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<script type="text/javascript" src="./rtwreport_utils.js"></script>
+<script type="text/javascript" src="./rtwannotate.js"></script>
+<link rel="stylesheet" type="text/css" href="./css/coder_app.css"/>
+</head>
+<body onload="srcFileOnload();">
+<pre id="code">
+<table class="code" id="codeTbl">
+<tr name="1" id="1">
+<td>1</td><td><span class="ct">/******************************************************************************</span></td></tr>
+<tr name="2" id="2">
+<td>2</td><td><span class="ct"> *</span></td></tr>
+<tr name="3" id="3">
+<td>3</td><td><span class="ct"> * Freescale Semiconductor Inc.</span></td></tr>
+<tr name="4" id="4">
+<td>4</td><td><span class="ct"> * (c) Copyright 2004-2011 Freescale Semiconductor</span></td></tr>
+<tr name="5" id="5">
+<td>5</td><td><span class="ct"> * ALL RIGHTS RESERVED.</span></td></tr>
+<tr name="6" id="6">
+<td>6</td><td><span class="ct"> *</span></td></tr>
+<tr name="7" id="7">
+<td>7</td><td><span class="ct"> ****************************************************************************/</span></td></tr>
+<tr name="8" id="8">
+<td>8</td><td>  <span class="ct">/*!</span></td></tr>
+<tr name="9" id="9">
+<td>9</td><td><span class="ct">   *</span></td></tr>
+<tr name="10" id="10">
+<td>10</td><td><span class="ct">   * @file   freemaster_serial.c</span></td></tr>
+<tr name="11" id="11">
+<td>11</td><td><span class="ct">   *</span></td></tr>
+<tr name="12" id="12">
+<td>12</td><td><span class="ct">   * @brief  FreeMASTER serial communication routines</span></td></tr>
+<tr name="13" id="13">
+<td>13</td><td><span class="ct">   *</span></td></tr>
+<tr name="14" id="14">
+<td>14</td><td><span class="ct">   * @version 1.1.28.0</span></td></tr>
+<tr name="15" id="15">
+<td>15</td><td><span class="ct">   *</span></td></tr>
+<tr name="16" id="16">
+<td>16</td><td><span class="ct">   * @date Jun-6-2011</span></td></tr>
+<tr name="17" id="17">
+<td>17</td><td><span class="ct">   *</span></td></tr>
+<tr name="18" id="18">
+<td>18</td><td><span class="ct">   *******************************************************************************/</span></td></tr>
+<tr name="19" id="19">
+<td>19</td><td></td></tr>
+<tr name="20" id="20">
+<td>20</td><td></td></tr>
+<tr name="21" id="21">
+<td>21</td><td><span class="pp">#include "freemaster.h"</span></td></tr>
+<tr name="22" id="22">
+<td>22</td><td><span class="pp">#include "freemaster_private.h"</span></td></tr>
+<tr name="23" id="23">
+<td>23</td><td><span class="pp">#include "freemaster_protocol.h"</span></td></tr>
+<tr name="24" id="24">
+<td>24</td><td><span class="pp">#if</span> <a id="24c5" class="tk">FMSTR_USE_SERIAL</a></td></tr>
+<tr name="25" id="25">
+<td>25</td><td></td></tr>
+<tr name="26" id="26">
+<td>26</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="27" id="27">
+<td>27</td><td><span class="ct"> *  local variables</span></td></tr>
+<tr name="28" id="28">
+<td>28</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="29" id="29">
+<td>29</td><td></td></tr>
+<tr name="30" id="30">
+<td>30</td><td><span class="ct">/* FreeMASTER communication buffer (in/out) plus the STS and LEN bytes */</span></td></tr>
+<tr name="31" id="31">
+<td>31</td><td><span class="kw">static</span> <a id="31c8" class="tk">FMSTR_BCHR</a> <a id="31c19" class="tk">pcm_pCommBuffer</a>[<a id="31c35" class="tk">FMSTR_COMM_BUFFER_SIZE</a><a id="31c57" class="tk">+</a>3];</td></tr>
+<tr name="32" id="32">
+<td>32</td><td></td></tr>
+<tr name="33" id="33">
+<td>33</td><td><span class="ct">/* FreeMASTER runtime flags */</span></td></tr>
+<tr name="34" id="34">
+<td>34</td><td><span class="ct">/*lint -e{960} using union */</span></td></tr>
+<tr name="35" id="35">
+<td>35</td><td><span class="kw">typedef</span> <span class="kw">volatile</span> <span class="kw">union</span></td></tr>
+<tr name="36" id="36">
+<td>36</td><td><span class="br">{</span></td></tr>
+<tr name="37" id="37">
+<td>37</td><td>  <a id="37c3" class="tk">FMSTR_FLAGS</a> <a id="37c15" class="tk">all</a>;</td></tr>
+<tr name="38" id="38">
+<td>38</td><td>  <span class="kw">struct</span> <span class="br">{</span></td></tr>
+<tr name="39" id="39">
+<td>39</td><td>    <span class="kw">unsigned</span> <a id="39c14" class="tk">bTxActive</a> <a id="39c24" class="tk">:</a> 1;            <span class="ct">/* response is being transmitted */</span></td></tr>
+<tr name="40" id="40">
+<td>40</td><td></td></tr>
+<tr name="41" id="41">
+<td>41</td><td><span class="pp">#if</span> <a id="41c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="42" id="42">
+<td>42</td><td></td></tr>
+<tr name="43" id="43">
+<td>43</td><td>    <span class="kw">unsigned</span> <a id="43c14" class="tk">bTxWaitTC</a> <a id="43c24" class="tk">:</a> 1;            <span class="ct">/* response sent, wait for transmission complete */</span></td></tr>
+<tr name="44" id="44">
+<td>44</td><td></td></tr>
+<tr name="45" id="45">
+<td>45</td><td><span class="pp">#endif</span></td></tr>
+<tr name="46" id="46">
+<td>46</td><td></td></tr>
+<tr name="47" id="47">
+<td>47</td><td>    <span class="kw">unsigned</span> <a id="47c14" class="tk">bTxLastCharSOB</a> <a id="47c29" class="tk">:</a> 1;       <span class="ct">/* last transmitted char was equal to SOB  */</span></td></tr>
+<tr name="48" id="48">
+<td>48</td><td>    <span class="kw">unsigned</span> <a id="48c14" class="tk">bRxLastCharSOB</a> <a id="48c29" class="tk">:</a> 1;       <span class="ct">/* last received character was SOB */</span></td></tr>
+<tr name="49" id="49">
+<td>49</td><td>    <span class="kw">unsigned</span> <a id="49c14" class="tk">bRxMsgLengthNext</a> <a id="49c31" class="tk">:</a> 1;     <span class="ct">/* expect the length byte next time */</span></td></tr>
+<tr name="50" id="50">
+<td>50</td><td></td></tr>
+<tr name="51" id="51">
+<td>51</td><td><span class="pp">#if</span> <a id="51c5" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="52" id="52">
+<td>52</td><td></td></tr>
+<tr name="53" id="53">
+<td>53</td><td>    <span class="kw">unsigned</span> <a id="53c14" class="tk">bJtagRIEPending</a> <a id="53c30" class="tk">:</a> 1;      <span class="ct">/* JTAG RIE bit failed to be set, try again later */</span></td></tr>
+<tr name="54" id="54">
+<td>54</td><td></td></tr>
+<tr name="55" id="55">
+<td>55</td><td><span class="pp">#endif</span></td></tr>
+<tr name="56" id="56">
+<td>56</td><td></td></tr>
+<tr name="57" id="57">
+<td>57</td><td><span class="pp">#if</span> <a id="57c5" class="tk">FMSTR_USE_USB_CDC</a> <a id="57c23" class="tk">||</a> <a id="57c26" class="tk">FMSTR_USE_MQX_IO</a> <a id="57c43" class="tk">||</a> <a id="57c46" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="58" id="58">
+<td>58</td><td></td></tr>
+<tr name="59" id="59">
+<td>59</td><td>    <span class="kw">unsigned</span> <a id="59c14" class="tk">bTxFirstSobSend</a> <a id="59c30" class="tk">:</a> 1;      <span class="ct">/* to send SOB char at the begin of the packet */</span></td></tr>
+<tr name="60" id="60">
+<td>60</td><td></td></tr>
+<tr name="61" id="61">
+<td>61</td><td><span class="pp">#endif</span></td></tr>
+<tr name="62" id="62">
+<td>62</td><td></td></tr>
+<tr name="63" id="63">
+<td>63</td><td><span class="pp">#if</span> <a id="63c5" class="tk">FMSTR_USE_MQX_IO</a></td></tr>
+<tr name="64" id="64">
+<td>64</td><td></td></tr>
+<tr name="65" id="65">
+<td>65</td><td>    <span class="kw">unsigned</span> <a id="65c14" class="tk">bMqxReadyToSend</a> <a id="65c30" class="tk">:</a> 1;      <span class="ct">/* to send next character in transmit routine */</span></td></tr>
+<tr name="66" id="66">
+<td>66</td><td></td></tr>
+<tr name="67" id="67">
+<td>67</td><td><span class="pp">#endif</span></td></tr>
+<tr name="68" id="68">
+<td>68</td><td></td></tr>
+<tr name="69" id="69">
+<td>69</td><td><span class="pp">#if</span> <a id="69c5" class="tk">FMSTR_USE_USB_CDC</a></td></tr>
+<tr name="70" id="70">
+<td>70</td><td></td></tr>
+<tr name="71" id="71">
+<td>71</td><td>    <span class="kw">unsigned</span> <a id="71c14" class="tk">bUsbCdcStartApp</a> <a id="71c30" class="tk">:</a> 1;      <span class="ct">/* FreeMASTER USB CDC Application start Init Flag */</span></td></tr>
+<tr name="72" id="72">
+<td>72</td><td>    <span class="kw">unsigned</span> <a id="72c14" class="tk">bUsbCdcStartTrans</a> <a id="72c32" class="tk">:</a> 1;    <span class="ct">/* FreeMASTER USB CDC Application Carrier Activate Flag */</span></td></tr>
+<tr name="73" id="73">
+<td>73</td><td>    <span class="kw">unsigned</span> <a id="73c14" class="tk">bUsbReadyToDecode</a> <a id="73c32" class="tk">:</a> 1;    <span class="ct">/* FreeMASTER packet is received, ready to decode in Poll function in Short Interrupt mode */</span></td></tr>
+<tr name="74" id="74">
+<td>74</td><td></td></tr>
+<tr name="75" id="75">
+<td>75</td><td><span class="pp">#endif</span></td></tr>
+<tr name="76" id="76">
+<td>76</td><td></td></tr>
+<tr name="77" id="77">
+<td>77</td><td>  <span class="br">}</span> <a id="77c5" class="tk">flg</a>;</td></tr>
+<tr name="78" id="78">
+<td>78</td><td><span class="br">}</span> <a id="78c3" class="tk">FMSTR_SERIAL_FLAGS</a>;</td></tr>
+<tr name="79" id="79">
+<td>79</td><td></td></tr>
+<tr name="80" id="80">
+<td>80</td><td><span class="kw">static</span> <a id="80c8" class="tk">FMSTR_SERIAL_FLAGS</a> <a id="80c27" class="tk">pcm_wFlags</a>;</td></tr>
+<tr name="81" id="81">
+<td>81</td><td></td></tr>
+<tr name="82" id="82">
+<td>82</td><td><span class="ct">/* receive and transmit buffers and counters */</span></td></tr>
+<tr name="83" id="83">
+<td>83</td><td><span class="kw">static</span> <a id="83c8" class="tk">FMSTR_SIZE8</a> <a id="83c20" class="tk">pcm_nTxTodo</a>;        <span class="ct">/* transmission to-do counter (0 when tx is idle) */</span></td></tr>
+<tr name="84" id="84">
+<td>84</td><td><span class="kw">static</span> <a id="84c8" class="tk">FMSTR_SIZE8</a> <a id="84c20" class="tk">pcm_nRxTodo</a>;        <span class="ct">/* reception to-do counter (0 when rx is idle) */</span></td></tr>
+<tr name="85" id="85">
+<td>85</td><td><span class="kw">static</span> <a id="85c8" class="tk">FMSTR_BPTR</a> <a id="85c19" class="tk">pcm_pTxBuff</a>;         <span class="ct">/* pointer to next byte to transmit */</span></td></tr>
+<tr name="86" id="86">
+<td>86</td><td><span class="kw">static</span> <a id="86c8" class="tk">FMSTR_BPTR</a> <a id="86c19" class="tk">pcm_pRxBuff</a>;         <span class="ct">/* pointer to next free place in RX buffer */</span></td></tr>
+<tr name="87" id="87">
+<td>87</td><td><span class="kw">static</span> <a id="87c8" class="tk">FMSTR_BCHR</a> <a id="87c19" class="tk">pcm_nRxCheckSum</a>;     <span class="ct">/* checksum of data being received */</span></td></tr>
+<tr name="88" id="88">
+<td>88</td><td></td></tr>
+<tr name="89" id="89">
+<td>89</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="90" id="90">
+<td>90</td><td><span class="ct"> *  local function prototypes</span></td></tr>
+<tr name="91" id="91">
+<td>91</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="92" id="92">
+<td>92</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="92c13" class="tk">FMSTR_Listen</a>(<span class="kw">void</span>);</td></tr>
+<tr name="93" id="93">
+<td>93</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="93c13" class="tk">FMSTR_SendError</a>(<a id="93c29" class="tk">FMSTR_BCHR</a> <a id="93c40" class="tk">nErrCode</a>);</td></tr>
+<tr name="94" id="94">
+<td>94</td><td></td></tr>
+<tr name="95" id="95">
+<td>95</td><td><span class="pp">#else</span>                                  <span class="ct">/* FMSTR_USE_SERIAL */</span></td></tr>
+<tr name="96" id="96">
+<td>96</td><td></td></tr>
+<tr name="97" id="97">
+<td>97</td><td><span class="ct">/*lint -efile(766, freemaster_protocol.h) include file is not used in this case */</span></td></tr>
+<tr name="98" id="98">
+<td>98</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_SERIAL */</span></td></tr>
+<tr name="99" id="99">
+<td>99</td><td></td></tr>
+<tr name="100" id="100">
+<td>100</td><td><span class="pp">#if</span> <a id="100c5" class="tk">FMSTR_USE_SCI</a> <a id="100c19" class="tk">||</a> <a id="100c22" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="101" id="101">
+<td>101</td><td></td></tr>
+<tr name="102" id="102">
+<td>102</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="103" id="103">
+<td>103</td><td><span class="ct"> *  local variables</span></td></tr>
+<tr name="104" id="104">
+<td>104</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="105" id="105">
+<td>105</td><td></td></tr>
+<tr name="106" id="106">
+<td>106</td><td><span class="ct">/* SHORT_INTR receive queue (circular buffer) */</span></td></tr>
+<tr name="107" id="107">
+<td>107</td><td><span class="pp">#if</span> <a id="107c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="108" id="108">
+<td>108</td><td></td></tr>
+<tr name="109" id="109">
+<td>109</td><td><span class="kw">static</span> <a id="109c8" class="tk">FMSTR_BCHR</a> <a id="109c19" class="tk">pcm_pRQueueBuffer</a>[<a id="109c37" class="tk">FMSTR_COMM_RQUEUE_SIZE</a>];</td></tr>
+<tr name="110" id="110">
+<td>110</td><td><span class="kw">static</span> <a id="110c8" class="tk">FMSTR_BPTR</a> <a id="110c19" class="tk">pcm_pRQueueRP</a>;       <span class="ct">/* SHORT_INTR queue read-pointer */</span></td></tr>
+<tr name="111" id="111">
+<td>111</td><td><span class="kw">static</span> <a id="111c8" class="tk">FMSTR_BPTR</a> <a id="111c19" class="tk">pcm_pRQueueWP</a>;       <span class="ct">/* SHORT_INTR queue write-pointer */</span></td></tr>
+<tr name="112" id="112">
+<td>112</td><td></td></tr>
+<tr name="113" id="113">
+<td>113</td><td><span class="pp">#endif</span></td></tr>
+<tr name="114" id="114">
+<td>114</td><td></td></tr>
+<tr name="115" id="115">
+<td>115</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="116" id="116">
+<td>116</td><td><span class="ct"> *  local function prototypes</span></td></tr>
+<tr name="117" id="117">
+<td>117</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="118" id="118">
+<td>118</td><td><span class="pp">#if</span> <a id="118c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="119" id="119">
+<td>119</td><td></td></tr>
+<tr name="120" id="120">
+<td>120</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="120c13" class="tk">FMSTR_RxQueue</a>(<a id="120c27" class="tk">FMSTR_BCHR</a> <a id="120c38" class="tk">nRxChar</a>);</td></tr>
+<tr name="121" id="121">
+<td>121</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="121c13" class="tk">FMSTR_RxDequeue</a>(<span class="kw">void</span>);</td></tr>
+<tr name="122" id="122">
+<td>122</td><td></td></tr>
+<tr name="123" id="123">
+<td>123</td><td><span class="pp">#endif</span></td></tr>
+<tr name="124" id="124">
+<td>124</td><td></td></tr>
+<tr name="125" id="125">
+<td>125</td><td><span class="ct">/*lint -esym(752,FMSTR_RxQueue) this may be unreferenced in some cases */</span></td></tr>
+<tr name="126" id="126">
+<td>126</td><td><span class="ct">/*lint -esym(752,FMSTR_RxDequeue) this may be unreferenced in some cases */</span></td></tr>
+<tr name="127" id="127">
+<td>127</td><td></td></tr>
+<tr name="128" id="128">
+<td>128</td><td><span class="ct">/*******************************************************************************</span></td></tr>
+<tr name="129" id="129">
+<td>129</td><td><span class="ct"> *</span></td></tr>
+<tr name="130" id="130">
+<td>130</td><td><span class="ct"> * @brief    Routine to quick-receive a character (put to a queue only)</span></td></tr>
+<tr name="131" id="131">
+<td>131</td><td><span class="ct"> *</span></td></tr>
+<tr name="132" id="132">
+<td>132</td><td><span class="ct"> * This function puts received character into a queue and exits as soon as possible.</span></td></tr>
+<tr name="133" id="133">
+<td>133</td><td><span class="ct"> *</span></td></tr>
+<tr name="134" id="134">
+<td>134</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="135" id="135">
+<td>135</td><td><span class="pp">#if</span> <a id="135c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="136" id="136">
+<td>136</td><td></td></tr>
+<tr name="137" id="137">
+<td>137</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="137c13" class="tk">FMSTR_RxQueue</a>(<a id="137c27" class="tk">FMSTR_BCHR</a> <a id="137c38" class="tk">nRxChar</a>)</td></tr>
+<tr name="138" id="138">
+<td>138</td><td><span class="br">{</span></td></tr>
+<tr name="139" id="139">
+<td>139</td><td>  <span class="ct">/* future value of write pointer */</span></td></tr>
+<tr name="140" id="140">
+<td>140</td><td>  <a id="140c3" class="tk">FMSTR_BPTR</a> <a id="140c14" class="tk">wpnext</a> = <a id="140c23" class="tk">pcm_pRQueueWP</a> <a id="140c37" class="tk">+</a> 1;</td></tr>
+<tr name="141" id="141">
+<td>141</td><td></td></tr>
+<tr name="142" id="142">
+<td>142</td><td>  <span class="ct">/*lint -e{946} pointer arithmetic is okay here (same array) */</span></td></tr>
+<tr name="143" id="143">
+<td>143</td><td>  <span class="kw">if</span> (<a id="143c7" class="tk">wpnext</a> <a id="143c14" class="tk">&gt;=</a> (<a id="143c18" class="tk">pcm_pRQueueBuffer</a> <a id="143c36" class="tk">+</a> <a id="143c38" class="tk">FMSTR_COMM_RQUEUE_SIZE</a>)) <span class="br">{</span></td></tr>
+<tr name="144" id="144">
+<td>144</td><td>    <a id="144c5" class="tk">wpnext</a> = <a id="144c14" class="tk">pcm_pRQueueBuffer</a>;</td></tr>
+<tr name="145" id="145">
+<td>145</td><td>  <span class="br">}</span></td></tr>
+<tr name="146" id="146">
+<td>146</td><td></td></tr>
+<tr name="147" id="147">
+<td>147</td><td>  <span class="ct">/* any space in queue? */</span></td></tr>
+<tr name="148" id="148">
+<td>148</td><td>  <span class="kw">if</span> (<a id="148c7" class="tk">wpnext</a> <a id="148c14" class="tk">!=</a> <a id="148c17" class="tk">pcm_pRQueueRP</a>) <span class="br">{</span></td></tr>
+<tr name="149" id="149">
+<td>149</td><td>    <a id="149c5" class="tk">*</a><a id="149c6" class="tk">pcm_pRQueueWP</a> = (<a id="149c23" class="tk">FMSTR_U8</a>) <a id="149c33" class="tk">nRxChar</a>;</td></tr>
+<tr name="150" id="150">
+<td>150</td><td>    <a id="150c5" class="tk">pcm_pRQueueWP</a> = <a id="150c21" class="tk">wpnext</a>;</td></tr>
+<tr name="151" id="151">
+<td>151</td><td>  <span class="br">}</span></td></tr>
+<tr name="152" id="152">
+<td>152</td><td><span class="br">}</span></td></tr>
+<tr name="153" id="153">
+<td>153</td><td></td></tr>
+<tr name="154" id="154">
+<td>154</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_SHORT_INTR  */</span></td></tr>
+<tr name="155" id="155">
+<td>155</td><td></td></tr>
+<tr name="156" id="156">
+<td>156</td><td><span class="ct">/*******************************************************************************</span></td></tr>
+<tr name="157" id="157">
+<td>157</td><td><span class="ct"> *</span></td></tr>
+<tr name="158" id="158">
+<td>158</td><td><span class="ct"> * @brief    Late processing of queued characters</span></td></tr>
+<tr name="159" id="159">
+<td>159</td><td><span class="ct"> *</span></td></tr>
+<tr name="160" id="160">
+<td>160</td><td><span class="ct"> * This function takes the queued characters and calls FMSTR_Rx() for each of them,</span></td></tr>
+<tr name="161" id="161">
+<td>161</td><td><span class="ct"> * just like as the characters would be received from SCI one by one.</span></td></tr>
+<tr name="162" id="162">
+<td>162</td><td><span class="ct"> *</span></td></tr>
+<tr name="163" id="163">
+<td>163</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="164" id="164">
+<td>164</td><td><span class="pp">#if</span> <a id="164c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="165" id="165">
+<td>165</td><td></td></tr>
+<tr name="166" id="166">
+<td>166</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="166c13" class="tk">FMSTR_RxDequeue</a>(<span class="kw">void</span>)</td></tr>
+<tr name="167" id="167">
+<td>167</td><td><span class="br">{</span></td></tr>
+<tr name="168" id="168">
+<td>168</td><td>  <a id="168c3" class="tk">FMSTR_BCHR</a> <a id="168c14" class="tk">nChar</a> = 0U;</td></tr>
+<tr name="169" id="169">
+<td>169</td><td></td></tr>
+<tr name="170" id="170">
+<td>170</td><td>  <span class="ct">/* get all queued characters */</span></td></tr>
+<tr name="171" id="171">
+<td>171</td><td>  <span class="kw">while</span> (<a id="171c10" class="tk">pcm_pRQueueRP</a> <a id="171c24" class="tk">!=</a> <a id="171c27" class="tk">pcm_pRQueueWP</a>) <span class="br">{</span></td></tr>
+<tr name="172" id="172">
+<td>172</td><td>    <a id="172c5" class="tk">nChar</a> = <a id="172c13" class="tk">*</a><a id="172c14" class="tk">pcm_pRQueueRP</a><a id="172c27" class="tk">++</a>;</td></tr>
+<tr name="173" id="173">
+<td>173</td><td></td></tr>
+<tr name="174" id="174">
+<td>174</td><td>    <span class="ct">/*lint -e{946} pointer arithmetic is okay here (same array) */</span></td></tr>
+<tr name="175" id="175">
+<td>175</td><td>    <span class="kw">if</span> (<a id="175c9" class="tk">pcm_pRQueueRP</a> <a id="175c23" class="tk">&gt;=</a> (<a id="175c27" class="tk">pcm_pRQueueBuffer</a> <a id="175c45" class="tk">+</a> <a id="175c47" class="tk">FMSTR_COMM_RQUEUE_SIZE</a>)) <span class="br">{</span></td></tr>
+<tr name="176" id="176">
+<td>176</td><td>      <a id="176c7" class="tk">pcm_pRQueueRP</a> = <a id="176c23" class="tk">pcm_pRQueueBuffer</a>;</td></tr>
+<tr name="177" id="177">
+<td>177</td><td>    <span class="br">}</span></td></tr>
+<tr name="178" id="178">
+<td>178</td><td></td></tr>
+<tr name="179" id="179">
+<td>179</td><td>    <span class="ct">/* emulate the SCI receive event */</span></td></tr>
+<tr name="180" id="180">
+<td>180</td><td>    <span class="kw">if</span> (<a id="180c9" class="tk">!</a><a id="180c10" class="tk">pcm_wFlags</a>.<a id="180c21" class="tk">flg</a>.<a id="180c25" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="181" id="181">
+<td>181</td><td>      (<span class="kw">void</span>)<a id="181c13" class="tk">FMSTR_Rx</a>(<a id="181c22" class="tk">nChar</a>);</td></tr>
+<tr name="182" id="182">
+<td>182</td><td>    <span class="br">}</span></td></tr>
+<tr name="183" id="183">
+<td>183</td><td>  <span class="br">}</span></td></tr>
+<tr name="184" id="184">
+<td>184</td><td><span class="br">}</span></td></tr>
+<tr name="185" id="185">
+<td>185</td><td></td></tr>
+<tr name="186" id="186">
+<td>186</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_SHORT_INTR */</span></td></tr>
+<tr name="187" id="187">
+<td>187</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_SCI || FMSTR_USE_JTAG */</span></td></tr>
+<tr name="188" id="188">
+<td>188</td><td></td></tr>
+<tr name="189" id="189">
+<td>189</td><td><span class="pp">#if</span> <a id="189c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="190" id="190">
+<td>190</td><td></td></tr>
+<tr name="191" id="191">
+<td>191</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="192" id="192">
+<td>192</td><td><span class="ct">/*!</span></td></tr>
+<tr name="193" id="193">
+<td>193</td><td><span class="ct"> *</span></td></tr>
+<tr name="194" id="194">
+<td>194</td><td><span class="ct"> * @brief    Handle SCI communication (both TX and RX)</span></td></tr>
+<tr name="195" id="195">
+<td>195</td><td><span class="ct"> *</span></td></tr>
+<tr name="196" id="196">
+<td>196</td><td><span class="ct"> * This function checks the SCI flags and calls the Rx and/or Tx functions</span></td></tr>
+<tr name="197" id="197">
+<td>197</td><td><span class="ct"> *</span></td></tr>
+<tr name="198" id="198">
+<td>198</td><td><span class="ct"> * @note This function can be called either from SCI ISR or from the polling routine</span></td></tr>
+<tr name="199" id="199">
+<td>199</td><td><span class="ct"> *</span></td></tr>
+<tr name="200" id="200">
+<td>200</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="201" id="201">
+<td>201</td><td><span class="kw">void</span> <a id="201c6" class="tk">FMSTR_ProcessSCI</a>(<span class="kw">void</span>)</td></tr>
+<tr name="202" id="202">
+<td>202</td><td><span class="br">{</span></td></tr>
+<tr name="203" id="203">
+<td>203</td><td>  <span class="ct">/* read &amp; clear status     */</span></td></tr>
+<tr name="204" id="204">
+<td>204</td><td>  <a id="204c3" class="tk">FMSTR_SCISR</a> <a id="204c15" class="tk">wSciSR</a> = <a id="204c24" class="tk">FMSTR_SCI_RDCLRSR</a>();</td></tr>
+<tr name="205" id="205">
+<td>205</td><td></td></tr>
+<tr name="206" id="206">
+<td>206</td><td>  <span class="ct">/* transmitter active and empty? */</span></td></tr>
+<tr name="207" id="207">
+<td>207</td><td>  <span class="kw">if</span> (<a id="207c7" class="tk">pcm_wFlags</a>.<a id="207c18" class="tk">flg</a>.<a id="207c22" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="208" id="208">
+<td>208</td><td>    <span class="ct">/* able to accept another character? */</span></td></tr>
+<tr name="209" id="209">
+<td>209</td><td>    <span class="kw">if</span> (<a id="209c9" class="tk">wSciSR</a> <a id="209c16" class="tk">&amp;</a> <a id="209c18" class="tk">FMSTR_SCISR_TDRE</a>) <span class="br">{</span></td></tr>
+<tr name="210" id="210">
+<td>210</td><td>      <a id="210c7" class="tk">FMSTR_U8</a> <a id="210c16" class="tk">ch</a>;</td></tr>
+<tr name="211" id="211">
+<td>211</td><td></td></tr>
+<tr name="212" id="212">
+<td>212</td><td>      <span class="ct">//(void)FMSTR_Tx(&amp;ch);</span></td></tr>
+<tr name="213" id="213">
+<td>213</td><td>      <span class="ct">/* just put the byte into the SCI transmit buffer */</span></td></tr>
+<tr name="214" id="214">
+<td>214</td><td>      <span class="kw">if</span> (<a id="214c11" class="tk">!</a><a id="214c12" class="tk">FMSTR_Tx</a>(<a id="214c21" class="tk">&amp;</a><a id="214c22" class="tk">ch</a>))</td></tr>
+<tr name="215" id="215">
+<td>215</td><td>        <a id="215c9" class="tk">FMSTR_SCI_PUTCHAR</a>((<a id="215c28" class="tk">FMSTR_U8</a>) <a id="215c38" class="tk">ch</a>);</td></tr>
+<tr name="216" id="216">
+<td>216</td><td>    <span class="br">}</span></td></tr>
+<tr name="217" id="217">
+<td>217</td><td></td></tr>
+<tr name="218" id="218">
+<td>218</td><td><span class="pp">#if</span> <a id="218c5" class="tk">FMSTR_SCI_HAS_TXQUEUE</a></td></tr>
+<tr name="219" id="219">
+<td>219</td><td></td></tr>
+<tr name="220" id="220">
+<td>220</td><td>    <span class="ct">/* waiting for transmission complete flag? */</span></td></tr>
+<tr name="221" id="221">
+<td>221</td><td>    <span class="kw">if</span> (<a id="221c9" class="tk">pcm_wFlags</a>.<a id="221c20" class="tk">flg</a>.<a id="221c24" class="tk">bTxWaitTC</a> <a id="221c34" class="tk">&amp;&amp;</a> (<a id="221c38" class="tk">wSciSR</a> <a id="221c45" class="tk">&amp;</a> <a id="221c47" class="tk">FMSTR_SCISR_TC</a>)) <span class="br">{</span></td></tr>
+<tr name="222" id="222">
+<td>222</td><td>      <span class="ct">/* after TC, we can switch to listen mode safely */</span></td></tr>
+<tr name="223" id="223">
+<td>223</td><td>      <a id="223c7" class="tk">FMSTR_Listen</a>();</td></tr>
+<tr name="224" id="224">
+<td>224</td><td>    <span class="br">}</span></td></tr>
+<tr name="225" id="225">
+<td>225</td><td></td></tr>
+<tr name="226" id="226">
+<td>226</td><td><span class="pp">#endif</span></td></tr>
+<tr name="227" id="227">
+<td>227</td><td></td></tr>
+<tr name="228" id="228">
+<td>228</td><td><span class="pp">#if</span> <a id="228c5" class="tk">!</a><a id="228c6" class="tk">FMSTR_SCI_TWOWIRE_ONLY</a></td></tr>
+<tr name="229" id="229">
+<td>229</td><td></td></tr>
+<tr name="230" id="230">
+<td>230</td><td>    <span class="ct">/* read-out and ignore any received character (loopback) */</span></td></tr>
+<tr name="231" id="231">
+<td>231</td><td>    <span class="kw">if</span> (<a id="231c9" class="tk">wSciSR</a> <a id="231c16" class="tk">&amp;</a> <a id="231c18" class="tk">FMSTR_SCISR_RDRF</a>) <span class="br">{</span></td></tr>
+<tr name="232" id="232">
+<td>232</td><td>      <span class="ct">/*lint -esym(550, nRxChar) */</span></td></tr>
+<tr name="233" id="233">
+<td>233</td><td>      <span class="kw">volatile</span> <a id="233c16" class="tk">FMSTR_U16</a> <a id="233c26" class="tk">nRxChar</a>;</td></tr>
+<tr name="234" id="234">
+<td>234</td><td>      <a id="234c7" class="tk">nRxChar</a> = <a id="234c17" class="tk">FMSTR_SCI_GETCHAR</a>();</td></tr>
+<tr name="235" id="235">
+<td>235</td><td>    <span class="br">}</span></td></tr>
+<tr name="236" id="236">
+<td>236</td><td></td></tr>
+<tr name="237" id="237">
+<td>237</td><td><span class="pp">#endif</span></td></tr>
+<tr name="238" id="238">
+<td>238</td><td></td></tr>
+<tr name="239" id="239">
+<td>239</td><td>  <span class="br">}</span></td></tr>
+<tr name="240" id="240">
+<td>240</td><td></td></tr>
+<tr name="241" id="241">
+<td>241</td><td>  <span class="ct">/* transmitter not active, able to receive */</span></td></tr>
+<tr name="242" id="242">
+<td>242</td><td>  <span class="kw">else</span> <span class="br">{</span></td></tr>
+<tr name="243" id="243">
+<td>243</td><td>    <span class="ct">/* data byte received? */</span></td></tr>
+<tr name="244" id="244">
+<td>244</td><td>    <span class="kw">if</span> (<a id="244c9" class="tk">wSciSR</a> <a id="244c16" class="tk">&amp;</a> <a id="244c18" class="tk">FMSTR_SCISR_RDRF</a>) <span class="br">{</span></td></tr>
+<tr name="245" id="245">
+<td>245</td><td>      <a id="245c7" class="tk">FMSTR_BCHR</a> <a id="245c18" class="tk">nRxChar</a> = 0U;</td></tr>
+<tr name="246" id="246">
+<td>246</td><td>      <a id="246c7" class="tk">nRxChar</a> = (<a id="246c18" class="tk">FMSTR_BCHR</a>) <a id="246c30" class="tk">FMSTR_SCI_GETCHAR</a>();</td></tr>
+<tr name="247" id="247">
+<td>247</td><td></td></tr>
+<tr name="248" id="248">
+<td>248</td><td><span class="pp">#if</span> <a id="248c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="249" id="249">
+<td>249</td><td></td></tr>
+<tr name="250" id="250">
+<td>250</td><td>      <a id="250c7" class="tk">FMSTR_RxQueue</a>(<a id="250c21" class="tk">nRxChar</a>);</td></tr>
+<tr name="251" id="251">
+<td>251</td><td></td></tr>
+<tr name="252" id="252">
+<td>252</td><td><span class="pp">#else</span></td></tr>
+<tr name="253" id="253">
+<td>253</td><td></td></tr>
+<tr name="254" id="254">
+<td>254</td><td>      (<span class="kw">void</span>)<a id="254c13" class="tk">FMSTR_Rx</a>(<a id="254c22" class="tk">nRxChar</a>);</td></tr>
+<tr name="255" id="255">
+<td>255</td><td></td></tr>
+<tr name="256" id="256">
+<td>256</td><td><span class="pp">#endif</span></td></tr>
+<tr name="257" id="257">
+<td>257</td><td></td></tr>
+<tr name="258" id="258">
+<td>258</td><td>    <span class="br">}</span></td></tr>
+<tr name="259" id="259">
+<td>259</td><td>  <span class="br">}</span></td></tr>
+<tr name="260" id="260">
+<td>260</td><td><span class="br">}</span></td></tr>
+<tr name="261" id="261">
+<td>261</td><td></td></tr>
+<tr name="262" id="262">
+<td>262</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_SCI */</span></td></tr>
+<tr name="263" id="263">
+<td>263</td><td></td></tr>
+<tr name="264" id="264">
+<td>264</td><td><span class="pp">#if</span> <a id="264c5" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="265" id="265">
+<td>265</td><td></td></tr>
+<tr name="266" id="266">
+<td>266</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="267" id="267">
+<td>267</td><td><span class="ct"> *  local function prototypes</span></td></tr>
+<tr name="268" id="268">
+<td>268</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="269" id="269">
+<td>269</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="269c13" class="tk">FMSTR_FlushJtagTx</a>(<span class="kw">void</span>);</td></tr>
+<tr name="270" id="270">
+<td>270</td><td></td></tr>
+<tr name="271" id="271">
+<td>271</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="272" id="272">
+<td>272</td><td></td></tr>
+<tr name="273" id="273">
+<td>273</td><td><span class="ct">/*!</span></td></tr>
+<tr name="274" id="274">
+<td>274</td><td><span class="ct"> *</span></td></tr>
+<tr name="275" id="275">
+<td>275</td><td><span class="ct"> * @brief    Flush one communication JTAG word</span></td></tr>
+<tr name="276" id="276">
+<td>276</td><td><span class="ct"> *</span></td></tr>
+<tr name="277" id="277">
+<td>277</td><td><span class="ct"> * This function gets the 4 bytes from FreeMASTER TX buffer and place them to</span></td></tr>
+<tr name="278" id="278">
+<td>278</td><td><span class="ct"> * JTAG transmit register.</span></td></tr>
+<tr name="279" id="279">
+<td>279</td><td><span class="ct"> *</span></td></tr>
+<tr name="280" id="280">
+<td>280</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="281" id="281">
+<td>281</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="281c13" class="tk">FMSTR_FlushJtagTx</a>(<span class="kw">void</span>)</td></tr>
+<tr name="282" id="282">
+<td>282</td><td><span class="br">{</span></td></tr>
+<tr name="283" id="283">
+<td>283</td><td>  <a id="283c3" class="tk">FMSTR_U8</a> <a id="283c12" class="tk">i</a>;</td></tr>
+<tr name="284" id="284">
+<td>284</td><td>  <a id="284c3" class="tk">FMSTR_U32</a> <a id="284c13" class="tk">wJtagTxData</a>;</td></tr>
+<tr name="285" id="285">
+<td>285</td><td>  <span class="kw">register</span> <a id="285c12" class="tk">FMSTR_U16</a> <a id="285c22" class="tk">wJtagSR</a> = <a id="285c32" class="tk">FMSTR_JTAG_GETSR</a>();</td></tr>
+<tr name="286" id="286">
+<td>286</td><td></td></tr>
+<tr name="287" id="287">
+<td>287</td><td>  <span class="ct">/* complete word to send */</span></td></tr>
+<tr name="288" id="288">
+<td>288</td><td>  <span class="kw">for</span> (<a id="288c8" class="tk">i</a>=0; <a id="288c13" class="tk">i</a><a id="288c14" class="tk">&lt;</a>4; <a id="288c18" class="tk">i</a><a id="288c19" class="tk">++</a>) <span class="br">{</span></td></tr>
+<tr name="289" id="289">
+<td>289</td><td>    <a id="289c5" class="tk">FMSTR_U8</a> <a id="289c14" class="tk">ch</a>;</td></tr>
+<tr name="290" id="290">
+<td>290</td><td>    <span class="kw">if</span> (<a id="290c9" class="tk">FMSTR_Tx</a>(<a id="290c18" class="tk">&amp;</a><a id="290c19" class="tk">ch</a>))</td></tr>
+<tr name="291" id="291">
+<td>291</td><td>      <a id="291c7" class="tk">ch</a> = 0xff;</td></tr>
+<tr name="292" id="292">
+<td>292</td><td>    <a id="292c5" class="tk">wJtagTxData</a> = (<a id="292c20" class="tk">wJtagTxData</a> <a id="292c32" class="tk">&lt;&lt;</a> 8) <a id="292c38" class="tk">|</a> <a id="292c40" class="tk">ch</a>;</td></tr>
+<tr name="293" id="293">
+<td>293</td><td>  <span class="br">}</span></td></tr>
+<tr name="294" id="294">
+<td>294</td><td></td></tr>
+<tr name="295" id="295">
+<td>295</td><td>  <span class="ct">/* send the word just completed */</span></td></tr>
+<tr name="296" id="296">
+<td>296</td><td>  <a id="296c3" class="tk">FMSTR_JTAG_PUTDWORD</a>(<a id="296c23" class="tk">wJtagTxData</a>);</td></tr>
+<tr name="297" id="297">
+<td>297</td><td><span class="br">}</span></td></tr>
+<tr name="298" id="298">
+<td>298</td><td></td></tr>
+<tr name="299" id="299">
+<td>299</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="300" id="300">
+<td>300</td><td></td></tr>
+<tr name="301" id="301">
+<td>301</td><td><span class="ct">/*!</span></td></tr>
+<tr name="302" id="302">
+<td>302</td><td><span class="ct"> *</span></td></tr>
+<tr name="303" id="303">
+<td>303</td><td><span class="ct"> * @brief    Handle JTAG communication (both TX and RX)</span></td></tr>
+<tr name="304" id="304">
+<td>304</td><td><span class="ct"> *</span></td></tr>
+<tr name="305" id="305">
+<td>305</td><td><span class="ct"> * This function checks the JTAG flags and calls the Rx and/or Tx functions</span></td></tr>
+<tr name="306" id="306">
+<td>306</td><td><span class="ct"> *</span></td></tr>
+<tr name="307" id="307">
+<td>307</td><td><span class="ct"> * @note This function can be called either from JTAG ISR or from the polling routine</span></td></tr>
+<tr name="308" id="308">
+<td>308</td><td><span class="ct"> *</span></td></tr>
+<tr name="309" id="309">
+<td>309</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="310" id="310">
+<td>310</td><td><span class="kw">void</span> <a id="310c6" class="tk">FMSTR_ProcessJTAG</a>(<span class="kw">void</span>)</td></tr>
+<tr name="311" id="311">
+<td>311</td><td><span class="br">{</span></td></tr>
+<tr name="312" id="312">
+<td>312</td><td>  <span class="ct">/* read &amp; clear status     */</span></td></tr>
+<tr name="313" id="313">
+<td>313</td><td>  <span class="kw">register</span> <a id="313c12" class="tk">FMSTR_U16</a> <a id="313c22" class="tk">wJtagSR</a> = <a id="313c32" class="tk">FMSTR_JTAG_GETSR</a>();</td></tr>
+<tr name="314" id="314">
+<td>314</td><td></td></tr>
+<tr name="315" id="315">
+<td>315</td><td>  <span class="ct">/* transmitter active? */</span></td></tr>
+<tr name="316" id="316">
+<td>316</td><td>  <span class="kw">if</span> (<a id="316c7" class="tk">pcm_wFlags</a>.<a id="316c18" class="tk">flg</a>.<a id="316c22" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="317" id="317">
+<td>317</td><td>    <span class="ct">/* able to transmit a new character? (TX must be empty = read-out by PC) */</span></td></tr>
+<tr name="318" id="318">
+<td>318</td><td>    <span class="kw">if</span> (<a id="318c9" class="tk">!</a>(<a id="318c11" class="tk">wJtagSR</a> <a id="318c19" class="tk">&amp;</a> <a id="318c21" class="tk">FMSTR_JTAG_OTXRXSR_TDF</a>)) <span class="br">{</span></td></tr>
+<tr name="319" id="319">
+<td>319</td><td></td></tr>
+<tr name="320" id="320">
+<td>320</td><td><span class="pp">#if</span> <a id="320c5" class="tk">FMSTR_USE_JTAG_TXFIX</a></td></tr>
+<tr name="321" id="321">
+<td>321</td><td></td></tr>
+<tr name="322" id="322">
+<td>322</td><td>      <span class="ct">/* if TDF bit is useless due to silicon bug, use the RX flag */</span></td></tr>
+<tr name="323" id="323">
+<td>323</td><td>      <span class="ct">/* instead (PC sends us a dummy word to kick the RX flag on) */</span></td></tr>
+<tr name="324" id="324">
+<td>324</td><td>      <span class="kw">if</span> (<a id="324c11" class="tk">wJtagSR</a> <a id="324c19" class="tk">&amp;</a> <a id="324c21" class="tk">FMSTR_JTAG_OTXRXSR_RDF</a>)</td></tr>
+<tr name="325" id="325">
+<td>325</td><td><span class="pp">#endif</span></td></tr>
+<tr name="326" id="326">
+<td>326</td><td></td></tr>
+<tr name="327" id="327">
+<td>327</td><td>        <span class="br">{</span></td></tr>
+<tr name="328" id="328">
+<td>328</td><td>          <a id="328c11" class="tk">FMSTR_FlushJtagTx</a>();</td></tr>
+<tr name="329" id="329">
+<td>329</td><td>        <span class="br">}</span></td></tr>
+<tr name="330" id="330">
+<td>330</td><td>    <span class="br">}</span></td></tr>
+<tr name="331" id="331">
+<td>331</td><td></td></tr>
+<tr name="332" id="332">
+<td>332</td><td>    <span class="ct">/* ignore (read-out) the JTAG-received word */</span></td></tr>
+<tr name="333" id="333">
+<td>333</td><td>    <span class="kw">if</span> (<a id="333c9" class="tk">wJtagSR</a> <a id="333c17" class="tk">&amp;</a> <a id="333c19" class="tk">FMSTR_JTAG_OTXRXSR_RDF</a>) <span class="br">{</span></td></tr>
+<tr name="334" id="334">
+<td>334</td><td>      <span class="ct">/*lint -esym(550, nRxWord) */</span></td></tr>
+<tr name="335" id="335">
+<td>335</td><td>      <span class="kw">volatile</span> <a id="335c16" class="tk">FMSTR_U16</a> <a id="335c26" class="tk">nRxWord</a>;</td></tr>
+<tr name="336" id="336">
+<td>336</td><td>      <a id="336c7" class="tk">nRxWord</a> = <a id="336c17" class="tk">FMSTR_JTAG_GETWORD</a>();</td></tr>
+<tr name="337" id="337">
+<td>337</td><td>    <span class="br">}</span></td></tr>
+<tr name="338" id="338">
+<td>338</td><td>  <span class="br">}</span></td></tr>
+<tr name="339" id="339">
+<td>339</td><td></td></tr>
+<tr name="340" id="340">
+<td>340</td><td>  <span class="ct">/* transmitter not active */</span></td></tr>
+<tr name="341" id="341">
+<td>341</td><td>  <span class="kw">else</span> <span class="br">{</span></td></tr>
+<tr name="342" id="342">
+<td>342</td><td>    <span class="ct">/* JTAG 32bit word (four bytes) received? */</span></td></tr>
+<tr name="343" id="343">
+<td>343</td><td>    <span class="kw">if</span> (<a id="343c9" class="tk">wJtagSR</a> <a id="343c17" class="tk">&amp;</a> <a id="343c19" class="tk">FMSTR_JTAG_OTXRXSR_RDF</a>) <span class="br">{</span></td></tr>
+<tr name="344" id="344">
+<td>344</td><td>      <span class="kw">register</span> <a id="344c16" class="tk">FMSTR_U32</a> <a id="344c26" class="tk">nRxDWord</a>;</td></tr>
+<tr name="345" id="345">
+<td>345</td><td>      <a id="345c7" class="tk">FMSTR_INDEX</a> <a id="345c19" class="tk">i</a>;</td></tr>
+<tr name="346" id="346">
+<td>346</td><td>      <a id="346c7" class="tk">nRxDWord</a> = <a id="346c18" class="tk">FMSTR_JTAG_GETDWORD</a>();</td></tr>
+<tr name="347" id="347">
+<td>347</td><td></td></tr>
+<tr name="348" id="348">
+<td>348</td><td>      <span class="ct">/* process all bytes, MSB first */</span></td></tr>
+<tr name="349" id="349">
+<td>349</td><td>      <span class="kw">for</span> (<a id="349c12" class="tk">i</a>=0; <a id="349c17" class="tk">i</a><a id="349c18" class="tk">&lt;</a>4; <a id="349c22" class="tk">i</a><a id="349c23" class="tk">++</a>) <span class="br">{</span></td></tr>
+<tr name="350" id="350">
+<td>350</td><td></td></tr>
+<tr name="351" id="351">
+<td>351</td><td><span class="pp">#if</span> <a id="351c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="352" id="352">
+<td>352</td><td></td></tr>
+<tr name="353" id="353">
+<td>353</td><td>        <a id="353c9" class="tk">FMSTR_RxQueue</a>((<a id="353c24" class="tk">FMSTR_BCHR</a>)((<a id="353c37" class="tk">nRxDWord</a> <a id="353c46" class="tk">&gt;&gt;</a> 24U) <a id="353c54" class="tk">&amp;</a> 0xffU));</td></tr>
+<tr name="354" id="354">
+<td>354</td><td></td></tr>
+<tr name="355" id="355">
+<td>355</td><td><span class="pp">#else</span></td></tr>
+<tr name="356" id="356">
+<td>356</td><td></td></tr>
+<tr name="357" id="357">
+<td>357</td><td>        (<span class="kw">void</span>)<a id="357c15" class="tk">FMSTR_Rx</a>((<a id="357c25" class="tk">FMSTR_BCHR</a>)((<a id="357c38" class="tk">nRxDWord</a> <a id="357c47" class="tk">&gt;&gt;</a> 24U) <a id="357c55" class="tk">&amp;</a> 0xffU));</td></tr>
+<tr name="358" id="358">
+<td>358</td><td></td></tr>
+<tr name="359" id="359">
+<td>359</td><td>        <span class="ct">/* ignore the rest if previous bytes triggered a transmission */</span></td></tr>
+<tr name="360" id="360">
+<td>360</td><td>        <span class="ct">/* (i.e. the packet was complete and only filled-up to 32bit word) */</span></td></tr>
+<tr name="361" id="361">
+<td>361</td><td>        <span class="kw">if</span> (<a id="361c13" class="tk">pcm_wFlags</a>.<a id="361c24" class="tk">flg</a>.<a id="361c28" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="362" id="362">
+<td>362</td><td>          <span class="kw">break</span>;</td></tr>
+<tr name="363" id="363">
+<td>363</td><td>        <span class="br">}</span></td></tr>
+<tr name="364" id="364">
+<td>364</td><td></td></tr>
+<tr name="365" id="365">
+<td>365</td><td><span class="pp">#endif</span></td></tr>
+<tr name="366" id="366">
+<td>366</td><td></td></tr>
+<tr name="367" id="367">
+<td>367</td><td>        <span class="ct">/* next byte of 32bit word */</span></td></tr>
+<tr name="368" id="368">
+<td>368</td><td>        <a id="368c9" class="tk">nRxDWord</a> = <a id="368c20" class="tk">nRxDWord</a> <a id="368c29" class="tk">&lt;&lt;</a> 8;</td></tr>
+<tr name="369" id="369">
+<td>369</td><td>      <span class="br">}</span></td></tr>
+<tr name="370" id="370">
+<td>370</td><td>    <span class="br">}</span></td></tr>
+<tr name="371" id="371">
+<td>371</td><td>  <span class="br">}</span></td></tr>
+<tr name="372" id="372">
+<td>372</td><td><span class="br">}</span></td></tr>
+<tr name="373" id="373">
+<td>373</td><td></td></tr>
+<tr name="374" id="374">
+<td>374</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_JTAG */</span></td></tr>
+<tr name="375" id="375">
+<td>375</td><td></td></tr>
+<tr name="376" id="376">
+<td>376</td><td><span class="ct">/******************************************************************************</span></td></tr>
+<tr name="377" id="377">
+<td>377</td><td><span class="ct"> ****************************************************************************/</span></td></tr>
+<tr name="378" id="378">
+<td>378</td><td><span class="ct">/*!</span></td></tr>
+<tr name="379" id="379">
+<td>379</td><td><span class="ct"> *</span></td></tr>
+<tr name="380" id="380">
+<td>380</td><td><span class="ct"> * FreeMASTER MQX IO serial communication routines</span></td></tr>
+<tr name="381" id="381">
+<td>381</td><td><span class="ct"> *</span></td></tr>
+<tr name="382" id="382">
+<td>382</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="383" id="383">
+<td>383</td><td><span class="pp">#if</span> <a id="383c5" class="tk">FMSTR_USE_MQX_IO</a></td></tr>
+<tr name="384" id="384">
+<td>384</td><td><span class="pp">#include &lt;mqx.h&gt;</span></td></tr>
+<tr name="385" id="385">
+<td>385</td><td><span class="pp">#include &lt;bsp.h&gt;</span></td></tr>
+<tr name="386" id="386">
+<td>386</td><td></td></tr>
+<tr name="387" id="387">
+<td>387</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="388" id="388">
+<td>388</td><td><span class="ct"> *  local variables</span></td></tr>
+<tr name="389" id="389">
+<td>389</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="390" id="390">
+<td>390</td><td><span class="kw">static</span> <a id="390c8" class="tk">FILE_PTR</a> <a id="390c17" class="tk">devfd</a> = <a id="390c25" class="tk">NULL</a>;          <span class="ct">/* pointer to open FreeMASTER communication interface */</span></td></tr>
+<tr name="391" id="391">
+<td>391</td><td></td></tr>
+<tr name="392" id="392">
+<td>392</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="393" id="393">
+<td>393</td><td><span class="ct"> *  local function prototypes</span></td></tr>
+<tr name="394" id="394">
+<td>394</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="395" id="395">
+<td>395</td><td><span class="kw">static</span> <a id="395c8" class="tk">FMSTR_BOOL</a> <a id="395c19" class="tk">FMSTR_InitMQX</a>(<span class="kw">void</span>);</td></tr>
+<tr name="396" id="396">
+<td>396</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="396c13" class="tk">FMSTR_ProcessMQXIO</a>(<span class="kw">void</span>);</td></tr>
+<tr name="397" id="397">
+<td>397</td><td></td></tr>
+<tr name="398" id="398">
+<td>398</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="399" id="399">
+<td>399</td><td></td></tr>
+<tr name="400" id="400">
+<td>400</td><td><span class="ct">/*!</span></td></tr>
+<tr name="401" id="401">
+<td>401</td><td><span class="ct"> *</span></td></tr>
+<tr name="402" id="402">
+<td>402</td><td><span class="ct"> * @brief    MQX communication interface initialization</span></td></tr>
+<tr name="403" id="403">
+<td>403</td><td><span class="ct"> *</span></td></tr>
+<tr name="404" id="404">
+<td>404</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="405" id="405">
+<td>405</td><td><span class="kw">static</span> <a id="405c8" class="tk">FMSTR_BOOL</a> <a id="405c19" class="tk">FMSTR_InitMQX</a>(<span class="kw">void</span>)</td></tr>
+<tr name="406" id="406">
+<td>406</td><td><span class="br">{</span></td></tr>
+<tr name="407" id="407">
+<td>407</td><td>  <span class="ct">/* Open communication port */</span></td></tr>
+<tr name="408" id="408">
+<td>408</td><td>  <a id="408c3" class="tk">devfd</a> = <a id="408c11" class="tk">fopen</a> (<a id="408c18" class="tk">FMSTR_MQX_IO_CHANNEL</a>, (<a id="408c41" class="tk">pointer</a>) <a id="408c50" class="tk">FMSTR_MQX_IO_PARAMETER</a>);</td></tr>
+<tr name="409" id="409">
+<td>409</td><td>  <span class="kw">return</span> (<a id="409c11" class="tk">devfd</a> <a id="409c17" class="tk">!=</a> <a id="409c20" class="tk">NULL</a>);</td></tr>
+<tr name="410" id="410">
+<td>410</td><td><span class="br">}</span></td></tr>
+<tr name="411" id="411">
+<td>411</td><td></td></tr>
+<tr name="412" id="412">
+<td>412</td><td><span class="ct">/*******************************************************************************</span></td></tr>
+<tr name="413" id="413">
+<td>413</td><td><span class="ct"> *</span></td></tr>
+<tr name="414" id="414">
+<td>414</td><td><span class="ct"> * @brief    Handle MQX IO serial communication (both TX and RX)</span></td></tr>
+<tr name="415" id="415">
+<td>415</td><td><span class="ct"> *</span></td></tr>
+<tr name="416" id="416">
+<td>416</td><td><span class="ct"> * This function calls MQX IO fread() function to get character and process it by</span></td></tr>
+<tr name="417" id="417">
+<td>417</td><td><span class="ct"> *</span></td></tr>
+<tr name="418" id="418">
+<td>418</td><td><span class="ct"> * FMSTR_Rx function when FreeMASTER packet is receiving. This function also transmit</span></td></tr>
+<tr name="419" id="419">
+<td>419</td><td><span class="ct"> *</span></td></tr>
+<tr name="420" id="420">
+<td>420</td><td><span class="ct"> * FreeMASTER response. Character to be send is provided by call of FMSTR_Tx function</span></td></tr>
+<tr name="421" id="421">
+<td>421</td><td><span class="ct"> *</span></td></tr>
+<tr name="422" id="422">
+<td>422</td><td><span class="ct"> * and passed down to fwrite() function.</span></td></tr>
+<tr name="423" id="423">
+<td>423</td><td><span class="ct"> *</span></td></tr>
+<tr name="424" id="424">
+<td>424</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="425" id="425">
+<td>425</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="425c13" class="tk">FMSTR_ProcessMQXIO</a>(<span class="kw">void</span>)</td></tr>
+<tr name="426" id="426">
+<td>426</td><td><span class="br">{</span></td></tr>
+<tr name="427" id="427">
+<td>427</td><td>  <span class="kw">if</span> (<a id="427c7" class="tk">devfd</a> <a id="427c13" class="tk">!=</a> <a id="427c16" class="tk">NULL</a>) <span class="br">{</span></td></tr>
+<tr name="428" id="428">
+<td>428</td><td>    <span class="kw">static</span> <a id="428c12" class="tk">FMSTR_U8</a> <a id="428c21" class="tk">TxChar</a> = 0;</td></tr>
+<tr name="429" id="429">
+<td>429</td><td></td></tr>
+<tr name="430" id="430">
+<td>430</td><td>    <span class="ct">/* transmitter not active, able to receive */</span></td></tr>
+<tr name="431" id="431">
+<td>431</td><td>    <span class="kw">if</span> ((<a id="431c10" class="tk">!</a><a id="431c11" class="tk">pcm_wFlags</a>.<a id="431c22" class="tk">flg</a>.<a id="431c26" class="tk">bTxActive</a>) <a id="431c37" class="tk">&amp;&amp;</a> (<a id="431c41" class="tk">!</a><a id="431c42" class="tk">pcm_wFlags</a>.<a id="431c53" class="tk">flg</a>.<a id="431c57" class="tk">bMqxReadyToSend</a>)) <span class="br">{</span></td></tr>
+<tr name="432" id="432">
+<td>432</td><td>      <a id="432c7" class="tk">FMSTR_U8</a> <a id="432c16" class="tk">nRxChar</a>;</td></tr>
+<tr name="433" id="433">
+<td>433</td><td></td></tr>
+<tr name="434" id="434">
+<td>434</td><td>      <span class="ct">/* read all available bytes from communication interface */</span></td></tr>
+<tr name="435" id="435">
+<td>435</td><td>      <span class="kw">while</span> (<a id="435c14" class="tk">fread</a>(<a id="435c20" class="tk">&amp;</a><a id="435c21" class="tk">nRxChar</a>, 1, 1, <a id="435c36" class="tk">devfd</a>)) <span class="br">{</span></td></tr>
+<tr name="436" id="436">
+<td>436</td><td>        <span class="kw">if</span> (<a id="436c13" class="tk">FMSTR_Rx</a>(<a id="436c22" class="tk">nRxChar</a>))</td></tr>
+<tr name="437" id="437">
+<td>437</td><td>          <span class="kw">break</span>;</td></tr>
+<tr name="438" id="438">
+<td>438</td><td>      <span class="br">}</span></td></tr>
+<tr name="439" id="439">
+<td>439</td><td>    <span class="br">}</span></td></tr>
+<tr name="440" id="440">
+<td>440</td><td></td></tr>
+<tr name="441" id="441">
+<td>441</td><td>    <span class="ct">/* transmitter active and empty? */</span></td></tr>
+<tr name="442" id="442">
+<td>442</td><td>    <span class="kw">if</span> (<a id="442c9" class="tk">pcm_wFlags</a>.<a id="442c20" class="tk">flg</a>.<a id="442c24" class="tk">bTxActive</a> <a id="442c34" class="tk">||</a> <a id="442c37" class="tk">pcm_wFlags</a>.<a id="442c48" class="tk">flg</a>.<a id="442c52" class="tk">bMqxReadyToSend</a>) <span class="br">{</span></td></tr>
+<tr name="443" id="443">
+<td>443</td><td>      <span class="kw">while</span> (1) <span class="br">{</span></td></tr>
+<tr name="444" id="444">
+<td>444</td><td>        <span class="ct">/* write character when is valid */</span></td></tr>
+<tr name="445" id="445">
+<td>445</td><td>        <span class="kw">if</span> (<a id="445c13" class="tk">pcm_wFlags</a>.<a id="445c24" class="tk">flg</a>.<a id="445c28" class="tk">bMqxReadyToSend</a>) <span class="br">{</span></td></tr>
+<tr name="446" id="446">
+<td>446</td><td>          <span class="kw">if</span> (<a id="446c15" class="tk">fwrite</a>(<a id="446c22" class="tk">&amp;</a><a id="446c23" class="tk">TxChar</a>, 1, 1, <a id="446c37" class="tk">devfd</a>))<span class="ct">/* character was successfully send, ready to get next character */</span></td></tr>
+<tr name="447" id="447">
+<td>447</td><td>            <a id="447c13" class="tk">pcm_wFlags</a>.<a id="447c24" class="tk">flg</a>.<a id="447c28" class="tk">bMqxReadyToSend</a> = 0;</td></tr>
+<tr name="448" id="448">
+<td>448</td><td>          <span class="kw">else</span>                         <span class="ct">/* character write failed, needs to be send next call */</span></td></tr>
+<tr name="449" id="449">
+<td>449</td><td>            <span class="kw">break</span>;</td></tr>
+<tr name="450" id="450">
+<td>450</td><td>        <span class="br">}</span></td></tr>
+<tr name="451" id="451">
+<td>451</td><td></td></tr>
+<tr name="452" id="452">
+<td>452</td><td>        <span class="ct">/* is ready to get next character? */</span></td></tr>
+<tr name="453" id="453">
+<td>453</td><td>        <span class="kw">if</span> (<a id="453c13" class="tk">FMSTR_Tx</a>((<a id="453c23" class="tk">FMSTR_U8</a><a id="453c31" class="tk">*</a>)<a id="453c33" class="tk">&amp;</a><a id="453c34" class="tk">TxChar</a>))<span class="ct">/* FreeMASTER packet is sent, exit loop */</span></td></tr>
+<tr name="454" id="454">
+<td>454</td><td>          <span class="kw">break</span>;</td></tr>
+<tr name="455" id="455">
+<td>455</td><td></td></tr>
+<tr name="456" id="456">
+<td>456</td><td>        <span class="ct">/* read next character, set its validity to be send */</span></td></tr>
+<tr name="457" id="457">
+<td>457</td><td>        <a id="457c9" class="tk">pcm_wFlags</a>.<a id="457c20" class="tk">flg</a>.<a id="457c24" class="tk">bMqxReadyToSend</a> = 1;</td></tr>
+<tr name="458" id="458">
+<td>458</td><td>      <span class="br">}</span></td></tr>
+<tr name="459" id="459">
+<td>459</td><td>    <span class="br">}</span></td></tr>
+<tr name="460" id="460">
+<td>460</td><td>  <span class="br">}</span></td></tr>
+<tr name="461" id="461">
+<td>461</td><td><span class="br">}</span></td></tr>
+<tr name="462" id="462">
+<td>462</td><td></td></tr>
+<tr name="463" id="463">
+<td>463</td><td><span class="pp">#else</span>                                  <span class="ct">/* FMSTR_USE_MQX_IO */</span></td></tr>
+<tr name="464" id="464">
+<td>464</td><td></td></tr>
+<tr name="465" id="465">
+<td>465</td><td><span class="ct">/*lint -efile(766, freemaster_protocol.h) include file is not used in this case */</span></td></tr>
+<tr name="466" id="466">
+<td>466</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_MQX_IO */</span></td></tr>
+<tr name="467" id="467">
+<td>467</td><td></td></tr>
+<tr name="468" id="468">
+<td>468</td><td><span class="ct">/******************************************************************************</span></td></tr>
+<tr name="469" id="469">
+<td>469</td><td><span class="ct"> ****************************************************************************/</span></td></tr>
+<tr name="470" id="470">
+<td>470</td><td><span class="ct">/*!</span></td></tr>
+<tr name="471" id="471">
+<td>471</td><td><span class="ct"> *</span></td></tr>
+<tr name="472" id="472">
+<td>472</td><td><span class="ct"> * FreeMASTER USB CDC serial communication routines</span></td></tr>
+<tr name="473" id="473">
+<td>473</td><td><span class="ct"> *</span></td></tr>
+<tr name="474" id="474">
+<td>474</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="475" id="475">
+<td>475</td><td><span class="pp">#if</span> <a id="475c5" class="tk">FMSTR_USE_USB_CDC</a></td></tr>
+<tr name="476" id="476">
+<td>476</td><td><span class="pp">#include "usb_cdc.h"</span>                   <span class="ct">/* USB CDC Class Header File */</span></td></tr>
+<tr name="477" id="477">
+<td>477</td><td></td></tr>
+<tr name="478" id="478">
+<td>478</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="479" id="479">
+<td>479</td><td><span class="ct"> *  Global variables</span></td></tr>
+<tr name="480" id="480">
+<td>480</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="481" id="481">
+<td>481</td><td><a id="481c1" class="tk">FMSTR_U8</a> <a id="481c10" class="tk">send_buf</a>[<a id="481c19" class="tk">DIC_BULK_IN_ENDP_PACKET_SIZE</a>];<span class="ct">//buffer for store packet to send</span></td></tr>
+<tr name="482" id="482">
+<td>482</td><td></td></tr>
+<tr name="483" id="483">
+<td>483</td><td><span class="ct">/***********************************</span></td></tr>
+<tr name="484" id="484">
+<td>484</td><td><span class="ct"> *  local function prototypes</span></td></tr>
+<tr name="485" id="485">
+<td>485</td><td><span class="ct"> ***********************************/</span></td></tr>
+<tr name="486" id="486">
+<td>486</td><td><span class="kw">static</span> <a id="486c8" class="tk">FMSTR_BOOL</a> <a id="486c19" class="tk">FMSTR_InitUSB</a>(<span class="kw">void</span>);</td></tr>
+<tr name="487" id="487">
+<td>487</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="487c13" class="tk">FMSTR_ProcessUSB</a>(<span class="kw">void</span>);</td></tr>
+<tr name="488" id="488">
+<td>488</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="488c13" class="tk">FMSTR_SendUsbPacket</a>(<span class="kw">void</span>);</td></tr>
+<tr name="489" id="489">
+<td>489</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="489c13" class="tk">FMSTR_USB_CDC_Callback</a>(<a id="489c36" class="tk">FMSTR_U8</a> <a id="489c45" class="tk">controller_ID</a>,</td></tr>
+<tr name="490" id="490">
+<td>490</td><td>  <a id="490c3" class="tk">FMSTR_U8</a> <a id="490c12" class="tk">event_type</a>, <span class="kw">void</span><a id="490c28" class="tk">*</a> <a id="490c30" class="tk">val</a>);</td></tr>
+<tr name="491" id="491">
+<td>491</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="491c13" class="tk">FMSTR_USB_CDC_Notify_Callback</a>(<a id="491c43" class="tk">FMSTR_U8</a> <a id="491c52" class="tk">controller_ID</a>,</td></tr>
+<tr name="492" id="492">
+<td>492</td><td>  <a id="492c3" class="tk">FMSTR_U8</a> <a id="492c12" class="tk">event_type</a>, <span class="kw">void</span><a id="492c28" class="tk">*</a> <a id="492c30" class="tk">val</a>);</td></tr>
+<tr name="493" id="493">
+<td>493</td><td></td></tr>
+<tr name="494" id="494">
+<td>494</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="495" id="495">
+<td>495</td><td></td></tr>
+<tr name="496" id="496">
+<td>496</td><td><span class="ct">/*!</span></td></tr>
+<tr name="497" id="497">
+<td>497</td><td><span class="ct"> *</span></td></tr>
+<tr name="498" id="498">
+<td>498</td><td><span class="ct"> * @brief    USB CDC communication interface initialization</span></td></tr>
+<tr name="499" id="499">
+<td>499</td><td><span class="ct"> *</span></td></tr>
+<tr name="500" id="500">
+<td>500</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="501" id="501">
+<td>501</td><td><span class="kw">static</span> <a id="501c8" class="tk">FMSTR_BOOL</a> <a id="501c19" class="tk">FMSTR_InitUSB</a>(<span class="kw">void</span>)</td></tr>
+<tr name="502" id="502">
+<td>502</td><td><span class="br">{</span></td></tr>
+<tr name="503" id="503">
+<td>503</td><td>  <a id="503c3" class="tk">FMSTR_U8</a> <a id="503c12" class="tk">error</a>;</td></tr>
+<tr name="504" id="504">
+<td>504</td><td></td></tr>
+<tr name="505" id="505">
+<td>505</td><td>  <span class="ct">/* Initialize the USB interface */</span></td></tr>
+<tr name="506" id="506">
+<td>506</td><td>  <a id="506c3" class="tk">error</a> = <a id="506c11" class="tk">USB_Class_CDC_Init</a>(<a id="506c30" class="tk">FMSTR_USB_CDC_ID</a>,<a id="506c47" class="tk">FMSTR_USB_CDC_Callback</a>,</td></tr>
+<tr name="507" id="507">
+<td>507</td><td>    <a id="507c5" class="tk">NULL</a>,<a id="507c10" class="tk">FMSTR_USB_CDC_Notify_Callback</a>);</td></tr>
+<tr name="508" id="508">
+<td>508</td><td>  <span class="kw">if</span> (<a id="508c7" class="tk">error</a> <a id="508c13" class="tk">!=</a> <a id="508c16" class="tk">USB_OK</a>) <span class="br">{</span></td></tr>
+<tr name="509" id="509">
+<td>509</td><td>    <span class="ct">/* Error initializing USB-CDC Class */</span></td></tr>
+<tr name="510" id="510">
+<td>510</td><td>    <span class="kw">return</span> <a id="510c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="511" id="511">
+<td>511</td><td>  <span class="br">}</span></td></tr>
+<tr name="512" id="512">
+<td>512</td><td></td></tr>
+<tr name="513" id="513">
+<td>513</td><td>  <span class="kw">return</span> <a id="513c10" class="tk">FMSTR_TRUE</a>;</td></tr>
+<tr name="514" id="514">
+<td>514</td><td><span class="br">}</span></td></tr>
+<tr name="515" id="515">
+<td>515</td><td></td></tr>
+<tr name="516" id="516">
+<td>516</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="517" id="517">
+<td>517</td><td></td></tr>
+<tr name="518" id="518">
+<td>518</td><td><span class="ct">/*!</span></td></tr>
+<tr name="519" id="519">
+<td>519</td><td><span class="ct"> *</span></td></tr>
+<tr name="520" id="520">
+<td>520</td><td><span class="ct"> * @brief    Handle USB CDC class periodic task and initialize FreeMASTER TX packet</span></td></tr>
+<tr name="521" id="521">
+<td>521</td><td><span class="ct"> *</span></td></tr>
+<tr name="522" id="522">
+<td>522</td><td><span class="ct"> * This function perform USB CDC periodic task. In Short Interrupt mode also decode</span></td></tr>
+<tr name="523" id="523">
+<td>523</td><td><span class="ct"> * received FreeMASTER packet and initialize transmit</span></td></tr>
+<tr name="524" id="524">
+<td>524</td><td><span class="ct"> *</span></td></tr>
+<tr name="525" id="525">
+<td>525</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="526" id="526">
+<td>526</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="526c13" class="tk">FMSTR_ProcessUSB</a>(<span class="kw">void</span>)</td></tr>
+<tr name="527" id="527">
+<td>527</td><td><span class="br">{</span></td></tr>
+<tr name="528" id="528">
+<td>528</td><td>  <span class="ct">/* call the periodic task function */</span></td></tr>
+<tr name="529" id="529">
+<td>529</td><td>  <a id="529c3" class="tk">USB_Class_CDC_Periodic_Task</a>();</td></tr>
+<tr name="530" id="530">
+<td>530</td><td></td></tr>
+<tr name="531" id="531">
+<td>531</td><td><span class="pp">#if</span> <a id="531c5" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="532" id="532">
+<td>532</td><td></td></tr>
+<tr name="533" id="533">
+<td>533</td><td>  <span class="ct">/*check whether enumeration is complete or not */</span></td></tr>
+<tr name="534" id="534">
+<td>534</td><td>  <span class="kw">if</span> ((<a id="534c8" class="tk">pcm_wFlags</a>.<a id="534c19" class="tk">flg</a>.<a id="534c23" class="tk">bUsbCdcStartApp</a>) <a id="534c40" class="tk">&amp;&amp;</a> (<a id="534c44" class="tk">pcm_wFlags</a>.<a id="534c55" class="tk">flg</a>.<a id="534c59" class="tk">bUsbCdcStartTrans</a>)) <span class="br">{</span></td></tr>
+<tr name="535" id="535">
+<td>535</td><td>    <span class="ct">/*transmitter not active, able to receive */</span></td></tr>
+<tr name="536" id="536">
+<td>536</td><td>    <span class="kw">if</span> ((<a id="536c10" class="tk">!</a><a id="536c11" class="tk">pcm_wFlags</a>.<a id="536c22" class="tk">flg</a>.<a id="536c26" class="tk">bTxActive</a>) <a id="536c37" class="tk">&amp;&amp;</a> (<a id="536c41" class="tk">pcm_wFlags</a>.<a id="536c52" class="tk">flg</a>.<a id="536c56" class="tk">bUsbReadyToDecode</a>)) <span class="br">{</span></td></tr>
+<tr name="537" id="537">
+<td>537</td><td>      <a id="537c7" class="tk">FMSTR_ProtocolDecoder</a>(<a id="537c29" class="tk">pcm_pCommBuffer</a>);</td></tr>
+<tr name="538" id="538">
+<td>538</td><td>      <a id="538c7" class="tk">pcm_wFlags</a>.<a id="538c18" class="tk">flg</a>.<a id="538c22" class="tk">bUsbReadyToDecode</a> = 0;</td></tr>
+<tr name="539" id="539">
+<td>539</td><td>    <span class="br">}</span></td></tr>
+<tr name="540" id="540">
+<td>540</td><td>  <span class="br">}</span></td></tr>
+<tr name="541" id="541">
+<td>541</td><td></td></tr>
+<tr name="542" id="542">
+<td>542</td><td><span class="pp">#endif</span></td></tr>
+<tr name="543" id="543">
+<td>543</td><td></td></tr>
+<tr name="544" id="544">
+<td>544</td><td><span class="br">}</span></td></tr>
+<tr name="545" id="545">
+<td>545</td><td></td></tr>
+<tr name="546" id="546">
+<td>546</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="547" id="547">
+<td>547</td><td></td></tr>
+<tr name="548" id="548">
+<td>548</td><td><span class="ct">/*!</span></td></tr>
+<tr name="549" id="549">
+<td>549</td><td><span class="ct"> *</span></td></tr>
+<tr name="550" id="550">
+<td>550</td><td><span class="ct"> * @brief    Get data from FreeMASTER TX buffer and send the data to USB device</span></td></tr>
+<tr name="551" id="551">
+<td>551</td><td><span class="ct"> *</span></td></tr>
+<tr name="552" id="552">
+<td>552</td><td><span class="ct"> * This function checks the FreeMASTER transmit state and when FreeMASTER is</span></td></tr>
+<tr name="553" id="553">
+<td>553</td><td><span class="ct"> * ready to send response to PC, copy FreeMASTER TX data to local buffer and</span></td></tr>
+<tr name="554" id="554">
+<td>554</td><td><span class="ct"> * pass down the buffer to USB CDC TX function.</span></td></tr>
+<tr name="555" id="555">
+<td>555</td><td><span class="ct"> *</span></td></tr>
+<tr name="556" id="556">
+<td>556</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="557" id="557">
+<td>557</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="557c13" class="tk">FMSTR_SendUsbPacket</a>(<span class="kw">void</span>)</td></tr>
+<tr name="558" id="558">
+<td>558</td><td><span class="br">{</span></td></tr>
+<tr name="559" id="559">
+<td>559</td><td>  <span class="ct">/* transmitter active and empty? */</span></td></tr>
+<tr name="560" id="560">
+<td>560</td><td>  <span class="kw">if</span> (<a id="560c7" class="tk">pcm_wFlags</a>.<a id="560c18" class="tk">flg</a>.<a id="560c22" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="561" id="561">
+<td>561</td><td>    <a id="561c5" class="tk">FMSTR_U8</a> <a id="561c14" class="tk">index</a>;</td></tr>
+<tr name="562" id="562">
+<td>562</td><td></td></tr>
+<tr name="563" id="563">
+<td>563</td><td>    <span class="ct">/* fill in the transmitter buffer */</span></td></tr>
+<tr name="564" id="564">
+<td>564</td><td>    <span class="kw">for</span> (<a id="564c10" class="tk">index</a> = 0; <a id="564c21" class="tk">index</a> <a id="564c27" class="tk">&lt;</a> <a id="564c29" class="tk">DIC_BULK_IN_ENDP_PACKET_SIZE</a>; <a id="564c59" class="tk">index</a><a id="564c64" class="tk">++</a>) <span class="br">{</span></td></tr>
+<tr name="565" id="565">
+<td>565</td><td>      <a id="565c7" class="tk">FMSTR_U8</a> <a id="565c16" class="tk">TxChar</a>;</td></tr>
+<tr name="566" id="566">
+<td>566</td><td>      <span class="kw">if</span> (<a id="566c11" class="tk">FMSTR_Tx</a>(<a id="566c20" class="tk">&amp;</a><a id="566c21" class="tk">TxChar</a>))</td></tr>
+<tr name="567" id="567">
+<td>567</td><td>        <span class="kw">break</span>;</td></tr>
+<tr name="568" id="568">
+<td>568</td><td>      <a id="568c7" class="tk">send_buf</a>[<a id="568c16" class="tk">index</a>] = <a id="568c25" class="tk">TxChar</a>;</td></tr>
+<tr name="569" id="569">
+<td>569</td><td>    <span class="br">}</span></td></tr>
+<tr name="570" id="570">
+<td>570</td><td></td></tr>
+<tr name="571" id="571">
+<td>571</td><td>    <a id="571c5" class="tk">USB_Class_CDC_Interface_DIC_Send_Data</a>(<a id="571c43" class="tk">FMSTR_USB_CDC_ID</a>, <a id="571c61" class="tk">send_buf</a>,<a id="571c70" class="tk">index</a>);</td></tr>
+<tr name="572" id="572">
+<td>572</td><td>  <span class="br">}</span></td></tr>
+<tr name="573" id="573">
+<td>573</td><td><span class="br">}</span></td></tr>
+<tr name="574" id="574">
+<td>574</td><td></td></tr>
+<tr name="575" id="575">
+<td>575</td><td><span class="ct">/******************************************************************************</span></td></tr>
+<tr name="576" id="576">
+<td>576</td><td><span class="ct"> *</span></td></tr>
+<tr name="577" id="577">
+<td>577</td><td><span class="ct"> *    @name        FMSTR_USB_CDC_Callback</span></td></tr>
+<tr name="578" id="578">
+<td>578</td><td><span class="ct"> *</span></td></tr>
+<tr name="579" id="579">
+<td>579</td><td><span class="ct"> *    @brief       This function handles Class callback</span></td></tr>
+<tr name="580" id="580">
+<td>580</td><td><span class="ct"> *</span></td></tr>
+<tr name="581" id="581">
+<td>581</td><td><span class="ct"> *    @param       controller_ID    : Controller ID</span></td></tr>
+<tr name="582" id="582">
+<td>582</td><td><span class="ct"> *    @param       event_type       : Value of the event</span></td></tr>
+<tr name="583" id="583">
+<td>583</td><td><span class="ct"> *    @param       val              : gives the configuration value</span></td></tr>
+<tr name="584" id="584">
+<td>584</td><td><span class="ct"> *</span></td></tr>
+<tr name="585" id="585">
+<td>585</td><td><span class="ct"> *    @return      None</span></td></tr>
+<tr name="586" id="586">
+<td>586</td><td><span class="ct"> *</span></td></tr>
+<tr name="587" id="587">
+<td>587</td><td><span class="ct"> *****************************************************************************</span></td></tr>
+<tr name="588" id="588">
+<td>588</td><td><span class="ct"> * This function is called from the class layer whenever reset occurs or enum</span></td></tr>
+<tr name="589" id="589">
+<td>589</td><td><span class="ct"> * is complete. After the enum is complete this function sets a variable so</span></td></tr>
+<tr name="590" id="590">
+<td>590</td><td><span class="ct"> * that the application can start.</span></td></tr>
+<tr name="591" id="591">
+<td>591</td><td><span class="ct"> * This function also receives DATA Send and RECEIVED Events</span></td></tr>
+<tr name="592" id="592">
+<td>592</td><td><span class="ct"> *****************************************************************************/</span></td></tr>
+<tr name="593" id="593">
+<td>593</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="593c13" class="tk">FMSTR_USB_CDC_Callback</a> (</td></tr>
+<tr name="594" id="594">
+<td>594</td><td>  <a id="594c3" class="tk">FMSTR_U8</a> <a id="594c12" class="tk">controller_ID</a>,              <span class="ct">/* [IN] Controller ID */</span></td></tr>
+<tr name="595" id="595">
+<td>595</td><td>  <a id="595c3" class="tk">FMSTR_U8</a> <a id="595c12" class="tk">event_type</a>,                 <span class="ct">/* [IN] value of the event */</span></td></tr>
+<tr name="596" id="596">
+<td>596</td><td>  <span class="kw">void</span><a id="596c7" class="tk">*</a> <a id="596c9" class="tk">val</a>                            <span class="ct">/* [IN] gives the configuration value */</span></td></tr>
+<tr name="597" id="597">
+<td>597</td><td>  )</td></tr>
+<tr name="598" id="598">
+<td>598</td><td><span class="br">{</span></td></tr>
+<tr name="599" id="599">
+<td>599</td><td>  <a id="599c3" class="tk">UNUSED</a> (<a id="599c11" class="tk">controller_ID</a>)</td></tr>
+<tr name="600" id="600">
+<td>600</td><td>    <a id="600c5" class="tk">UNUSED</a> (<a id="600c13" class="tk">val</a>)</td></tr>
+<tr name="601" id="601">
+<td>601</td><td>    <span class="kw">if</span>(<a id="601c8" class="tk">event_type</a> <a id="601c19" class="tk">==</a> <a id="601c22" class="tk">USB_APP_BUS_RESET</a>)</td></tr>
+<tr name="602" id="602">
+<td>602</td><td>  <span class="br">{</span></td></tr>
+<tr name="603" id="603">
+<td>603</td><td>    <a id="603c5" class="tk">pcm_wFlags</a>.<a id="603c16" class="tk">flg</a>.<a id="603c20" class="tk">bUsbCdcStartApp</a> = 0U;</td></tr>
+<tr name="604" id="604">
+<td>604</td><td>  <span class="br">}</span></td></tr>
+<tr name="605" id="605">
+<td>605</td><td></td></tr>
+<tr name="606" id="606">
+<td>606</td><td>  <span class="kw">else</span> <span class="kw">if</span>(<a id="606c11" class="tk">event_type</a> <a id="606c22" class="tk">==</a> <a id="606c25" class="tk">USB_APP_ENUM_COMPLETE</a>)</td></tr>
+<tr name="607" id="607">
+<td>607</td><td>  <span class="br">{</span></td></tr>
+<tr name="608" id="608">
+<td>608</td><td>    <a id="608c5" class="tk">pcm_wFlags</a>.<a id="608c16" class="tk">flg</a>.<a id="608c20" class="tk">bUsbCdcStartApp</a> = 1U;</td></tr>
+<tr name="609" id="609">
+<td>609</td><td>  <span class="br">}</span></td></tr>
+<tr name="610" id="610">
+<td>610</td><td></td></tr>
+<tr name="611" id="611">
+<td>611</td><td>  <span class="kw">else</span> <span class="kw">if</span>((<a id="611c12" class="tk">event_type</a> <a id="611c23" class="tk">==</a> <a id="611c26" class="tk">USB_APP_DATA_RECEIVED</a>) <a id="611c49" class="tk">&amp;&amp;</a></td></tr>
+<tr name="612" id="612">
+<td>612</td><td>          (<a id="612c12" class="tk">pcm_wFlags</a>.<a id="612c23" class="tk">flg</a>.<a id="612c27" class="tk">bUsbCdcStartTrans</a>))</td></tr>
+<tr name="613" id="613">
+<td>613</td><td>  <span class="br">{</span></td></tr>
+<tr name="614" id="614">
+<td>614</td><td>    <span class="ct">/* manage received data */</span></td></tr>
+<tr name="615" id="615">
+<td>615</td><td>    <span class="kw">if</span> (<a id="615c9" class="tk">pcm_wFlags</a>.<a id="615c20" class="tk">flg</a>.<a id="615c24" class="tk">bUsbCdcStartApp</a>) <span class="br">{</span></td></tr>
+<tr name="616" id="616">
+<td>616</td><td>      <span class="ct">/* Copy Received Data buffer to Application Buffer */</span></td></tr>
+<tr name="617" id="617">
+<td>617</td><td>      <a id="617c7" class="tk">USB_PACKET_SIZE</a> <a id="617c23" class="tk">BytesToBeCopied</a>;</td></tr>
+<tr name="618" id="618">
+<td>618</td><td>      <a id="618c7" class="tk">APP_DATA_STRUCT</a><a id="618c22" class="tk">*</a> <a id="618c24" class="tk">dp_rcv</a> = (<a id="618c34" class="tk">APP_DATA_STRUCT</a><a id="618c49" class="tk">*</a>)<a id="618c51" class="tk">val</a>;</td></tr>
+<tr name="619" id="619">
+<td>619</td><td>      <a id="619c7" class="tk">BytesToBeCopied</a> = <a id="619c25" class="tk">dp_rcv</a>-&gt;<a id="619c33" class="tk">data_size</a>;</td></tr>
+<tr name="620" id="620">
+<td>620</td><td></td></tr>
+<tr name="621" id="621">
+<td>621</td><td>      <span class="ct">/* transmitter not active, able to receive */</span></td></tr>
+<tr name="622" id="622">
+<td>622</td><td>      <span class="kw">if</span> (<a id="622c11" class="tk">!</a><a id="622c12" class="tk">pcm_wFlags</a>.<a id="622c23" class="tk">flg</a>.<a id="622c27" class="tk">bTxActive</a>) <span class="br">{</span></td></tr>
+<tr name="623" id="623">
+<td>623</td><td>        <a id="623c9" class="tk">FMSTR_U8</a> <a id="623c18" class="tk">index</a>;</td></tr>
+<tr name="624" id="624">
+<td>624</td><td>        <span class="kw">for</span> (<a id="624c14" class="tk">index</a> = 0 ; <a id="624c26" class="tk">index</a><a id="624c31" class="tk">&lt;</a><a id="624c32" class="tk">BytesToBeCopied</a> ; <a id="624c50" class="tk">index</a><a id="624c55" class="tk">++</a>) <span class="br">{</span></td></tr>
+<tr name="625" id="625">
+<td>625</td><td>          <span class="kw">if</span> (<a id="625c15" class="tk">FMSTR_Rx</a>(<a id="625c24" class="tk">dp_rcv</a>-&gt;<a id="625c32" class="tk">data_ptr</a>[<a id="625c41" class="tk">index</a>])) <span class="br">{</span></td></tr>
+<tr name="626" id="626">
+<td>626</td><td>            <span class="kw">break</span>;</td></tr>
+<tr name="627" id="627">
+<td>627</td><td>          <span class="br">}</span></td></tr>
+<tr name="628" id="628">
+<td>628</td><td>        <span class="br">}</span></td></tr>
+<tr name="629" id="629">
+<td>629</td><td></td></tr>
+<tr name="630" id="630">
+<td>630</td><td>        <span class="ct">/* continue receiving, when packet is not decoded */</span></td></tr>
+<tr name="631" id="631">
+<td>631</td><td>        <span class="kw">if</span> (<a id="631c13" class="tk">index</a> <a id="631c19" class="tk">==</a> <a id="631c22" class="tk">BytesToBeCopied</a>)  <span class="ct">/* receive next packet only when are not received all bytes of packet */</span></td></tr>
+<tr name="632" id="632">
+<td>632</td><td>          (<span class="kw">void</span>)<a id="632c17" class="tk">USB_Class_CDC_Interface_DIC_Recv_Data</a>(<a id="632c55" class="tk">FMSTR_USB_CDC_ID</a>, <a id="632c73" class="tk">NULL</a>, 0);</td></tr>
+<tr name="633" id="633">
+<td>633</td><td>      <span class="br">}</span></td></tr>
+<tr name="634" id="634">
+<td>634</td><td>    <span class="br">}</span></td></tr>
+<tr name="635" id="635">
+<td>635</td><td>  <span class="br">}</span></td></tr>
+<tr name="636" id="636">
+<td>636</td><td></td></tr>
+<tr name="637" id="637">
+<td>637</td><td>  <span class="kw">else</span> <span class="kw">if</span>((<a id="637c12" class="tk">event_type</a> <a id="637c23" class="tk">==</a> <a id="637c26" class="tk">USB_APP_SEND_COMPLETE</a>) <a id="637c49" class="tk">&amp;&amp;</a></td></tr>
+<tr name="638" id="638">
+<td>638</td><td>          (<a id="638c12" class="tk">pcm_wFlags</a>.<a id="638c23" class="tk">flg</a>.<a id="638c27" class="tk">bUsbCdcStartTrans</a>))</td></tr>
+<tr name="639" id="639">
+<td>639</td><td>  <span class="br">{</span></td></tr>
+<tr name="640" id="640">
+<td>640</td><td>    <span class="kw">if</span> ((<a id="640c10" class="tk">pcm_wFlags</a>.<a id="640c21" class="tk">flg</a>.<a id="640c25" class="tk">bUsbCdcStartApp</a>) <a id="640c42" class="tk">&amp;&amp;</a> (<a id="640c46" class="tk">pcm_wFlags</a>.<a id="640c57" class="tk">flg</a>.<a id="640c61" class="tk">bTxActive</a>))<span class="ct">/* Finalize USB packet to transmit and send packet */</span></td></tr>
+<tr name="641" id="641">
+<td>641</td><td>      <a id="641c7" class="tk">FMSTR_SendUsbPacket</a>();</td></tr>
+<tr name="642" id="642">
+<td>642</td><td>    <span class="kw">else</span>                               <span class="ct">/* Previous Send is complete. Queue next receive */</span></td></tr>
+<tr name="643" id="643">
+<td>643</td><td>      (<span class="kw">void</span>)<a id="643c13" class="tk">USB_Class_CDC_Interface_DIC_Recv_Data</a>(<a id="643c51" class="tk">FMSTR_USB_CDC_ID</a>, <a id="643c69" class="tk">NULL</a>, 0);</td></tr>
+<tr name="644" id="644">
+<td>644</td><td>  <span class="br">}</span></td></tr>
+<tr name="645" id="645">
+<td>645</td><td></td></tr>
+<tr name="646" id="646">
+<td>646</td><td>  <span class="kw">return</span>;</td></tr>
+<tr name="647" id="647">
+<td>647</td><td><span class="br">}</span></td></tr>
+<tr name="648" id="648">
+<td>648</td><td></td></tr>
+<tr name="649" id="649">
+<td>649</td><td><span class="ct">/******************************************************************************</span></td></tr>
+<tr name="650" id="650">
+<td>650</td><td><span class="ct"> *</span></td></tr>
+<tr name="651" id="651">
+<td>651</td><td><span class="ct"> *    @name        FMSTR_USB_CDC_Notify_Callback</span></td></tr>
+<tr name="652" id="652">
+<td>652</td><td><span class="ct"> *</span></td></tr>
+<tr name="653" id="653">
+<td>653</td><td><span class="ct"> *    @brief       This function handles PSTN Sub Class callbacks</span></td></tr>
+<tr name="654" id="654">
+<td>654</td><td><span class="ct"> *</span></td></tr>
+<tr name="655" id="655">
+<td>655</td><td><span class="ct"> *    @param       controller_ID    : Controller ID</span></td></tr>
+<tr name="656" id="656">
+<td>656</td><td><span class="ct"> *    @param       event_type       : PSTN Event Type</span></td></tr>
+<tr name="657" id="657">
+<td>657</td><td><span class="ct"> *    @param       val              : gives the configuration value</span></td></tr>
+<tr name="658" id="658">
+<td>658</td><td><span class="ct"> *</span></td></tr>
+<tr name="659" id="659">
+<td>659</td><td><span class="ct"> *    @return      None</span></td></tr>
+<tr name="660" id="660">
+<td>660</td><td><span class="ct"> *</span></td></tr>
+<tr name="661" id="661">
+<td>661</td><td><span class="ct"> *****************************************************************************</span></td></tr>
+<tr name="662" id="662">
+<td>662</td><td><span class="ct"> * This function handles USB_APP_CDC_CARRIER_ACTIVATED and</span></td></tr>
+<tr name="663" id="663">
+<td>663</td><td><span class="ct"> * USB_APP_CDC_CARRIER_DEACTIVATED PSTN Events</span></td></tr>
+<tr name="664" id="664">
+<td>664</td><td><span class="ct"> *****************************************************************************/</span></td></tr>
+<tr name="665" id="665">
+<td>665</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="665c13" class="tk">FMSTR_USB_CDC_Notify_Callback</a> (</td></tr>
+<tr name="666" id="666">
+<td>666</td><td>  <a id="666c3" class="tk">FMSTR_U8</a> <a id="666c12" class="tk">controller_ID</a>,              <span class="ct">/* [IN] Controller ID */</span></td></tr>
+<tr name="667" id="667">
+<td>667</td><td>  <a id="667c3" class="tk">FMSTR_U8</a> <a id="667c12" class="tk">event_type</a>,                 <span class="ct">/* [IN] PSTN Event Type */</span></td></tr>
+<tr name="668" id="668">
+<td>668</td><td>  <span class="kw">void</span><a id="668c7" class="tk">*</a> <a id="668c9" class="tk">val</a>                            <span class="ct">/* [IN] gives the configuration value */</span></td></tr>
+<tr name="669" id="669">
+<td>669</td><td>  )</td></tr>
+<tr name="670" id="670">
+<td>670</td><td><span class="br">{</span></td></tr>
+<tr name="671" id="671">
+<td>671</td><td>  <a id="671c3" class="tk">UNUSED</a> (<a id="671c11" class="tk">controller_ID</a>)</td></tr>
+<tr name="672" id="672">
+<td>672</td><td>    <a id="672c5" class="tk">UNUSED</a> (<a id="672c13" class="tk">val</a>)</td></tr>
+<tr name="673" id="673">
+<td>673</td><td>    <span class="kw">if</span>(<a id="673c8" class="tk">pcm_wFlags</a>.<a id="673c19" class="tk">flg</a>.<a id="673c23" class="tk">bUsbCdcStartApp</a>)</td></tr>
+<tr name="674" id="674">
+<td>674</td><td>  <span class="br">{</span></td></tr>
+<tr name="675" id="675">
+<td>675</td><td>    <span class="kw">if</span> (<a id="675c9" class="tk">event_type</a> <a id="675c20" class="tk">==</a> <a id="675c23" class="tk">USB_APP_CDC_CARRIER_ACTIVATED</a>) <span class="br">{</span></td></tr>
+<tr name="676" id="676">
+<td>676</td><td>      <a id="676c7" class="tk">pcm_wFlags</a>.<a id="676c18" class="tk">flg</a>.<a id="676c22" class="tk">bUsbCdcStartTrans</a> = 1U;</td></tr>
+<tr name="677" id="677">
+<td>677</td><td>    <span class="br">}</span> <span class="kw">else</span> <span class="kw">if</span> (<a id="677c16" class="tk">event_type</a> <a id="677c27" class="tk">==</a> <a id="677c30" class="tk">USB_APP_CDC_CARRIER_DEACTIVATED</a>) <span class="br">{</span></td></tr>
+<tr name="678" id="678">
+<td>678</td><td>      <a id="678c7" class="tk">pcm_wFlags</a>.<a id="678c18" class="tk">flg</a>.<a id="678c22" class="tk">bUsbCdcStartTrans</a> = 0U;</td></tr>
+<tr name="679" id="679">
+<td>679</td><td>    <span class="br">}</span></td></tr>
+<tr name="680" id="680">
+<td>680</td><td>  <span class="br">}</span></td></tr>
+<tr name="681" id="681">
+<td>681</td><td></td></tr>
+<tr name="682" id="682">
+<td>682</td><td>  <span class="kw">return</span>;</td></tr>
+<tr name="683" id="683">
+<td>683</td><td><span class="br">}</span></td></tr>
+<tr name="684" id="684">
+<td>684</td><td></td></tr>
+<tr name="685" id="685">
+<td>685</td><td><span class="pp">#else</span>                                  <span class="ct">/* FMSTR_USE_USB_CDC */</span></td></tr>
+<tr name="686" id="686">
+<td>686</td><td></td></tr>
+<tr name="687" id="687">
+<td>687</td><td><span class="ct">/*lint -efile(766, freemaster_protocol.h) include file is not used in this case */</span></td></tr>
+<tr name="688" id="688">
+<td>688</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_USB_CDC */</span></td></tr>
+<tr name="689" id="689">
+<td>689</td><td></td></tr>
+<tr name="690" id="690">
+<td>690</td><td><span class="pp">#if</span> <a id="690c5" class="tk">FMSTR_USE_SERIAL</a></td></tr>
+<tr name="691" id="691">
+<td>691</td><td></td></tr>
+<tr name="692" id="692">
+<td>692</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="693" id="693">
+<td>693</td><td><span class="ct">/*!</span></td></tr>
+<tr name="694" id="694">
+<td>694</td><td><span class="ct"> *</span></td></tr>
+<tr name="695" id="695">
+<td>695</td><td><span class="ct"> * @brief    Start listening on a serial line</span></td></tr>
+<tr name="696" id="696">
+<td>696</td><td><span class="ct"> *</span></td></tr>
+<tr name="697" id="697">
+<td>697</td><td><span class="ct"> * Reset the receiver machine and start listening on a serial line</span></td></tr>
+<tr name="698" id="698">
+<td>698</td><td><span class="ct"> *</span></td></tr>
+<tr name="699" id="699">
+<td>699</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="700" id="700">
+<td>700</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="700c13" class="tk">FMSTR_Listen</a>(<span class="kw">void</span>)</td></tr>
+<tr name="701" id="701">
+<td>701</td><td><span class="br">{</span></td></tr>
+<tr name="702" id="702">
+<td>702</td><td>  <a id="702c3" class="tk">pcm_nRxTodo</a> = 0U;</td></tr>
+<tr name="703" id="703">
+<td>703</td><td></td></tr>
+<tr name="704" id="704">
+<td>704</td><td>  <span class="ct">/* disable transmitter state machine */</span></td></tr>
+<tr name="705" id="705">
+<td>705</td><td>  <a id="705c3" class="tk">pcm_wFlags</a>.<a id="705c14" class="tk">flg</a>.<a id="705c18" class="tk">bTxActive</a> = 0U;</td></tr>
+<tr name="706" id="706">
+<td>706</td><td></td></tr>
+<tr name="707" id="707">
+<td>707</td><td><span class="pp">#if</span> <a id="707c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="708" id="708">
+<td>708</td><td></td></tr>
+<tr name="709" id="709">
+<td>709</td><td>  <a id="709c3" class="tk">pcm_wFlags</a>.<a id="709c14" class="tk">flg</a>.<a id="709c18" class="tk">bTxWaitTC</a> = 0U;</td></tr>
+<tr name="710" id="710">
+<td>710</td><td></td></tr>
+<tr name="711" id="711">
+<td>711</td><td>  <span class="ct">/* disable transmitter, enable receiver (enables single-wire connection) */</span></td></tr>
+<tr name="712" id="712">
+<td>712</td><td><span class="pp">#if</span> <a id="712c5" class="tk">!</a><a id="712c6" class="tk">FMSTR_SCI_TWOWIRE_ONLY</a></td></tr>
+<tr name="713" id="713">
+<td>713</td><td></td></tr>
+<tr name="714" id="714">
+<td>714</td><td>  <a id="714c3" class="tk">FMSTR_SCI_TD</a>();</td></tr>
+<tr name="715" id="715">
+<td>715</td><td>  <a id="715c3" class="tk">FMSTR_SCI_RE</a>();</td></tr>
+<tr name="716" id="716">
+<td>716</td><td></td></tr>
+<tr name="717" id="717">
+<td>717</td><td><span class="pp">#endif</span></td></tr>
+<tr name="718" id="718">
+<td>718</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_SCI */</span></td></tr>
+<tr name="719" id="719">
+<td>719</td><td></td></tr>
+<tr name="720" id="720">
+<td>720</td><td>  <span class="ct">/* disable transmit, enable receive interrupts */</span></td></tr>
+<tr name="721" id="721">
+<td>721</td><td><span class="pp">#if</span> <a id="721c5" class="tk">FMSTR_SHORT_INTR</a> <a id="721c22" class="tk">||</a> <a id="721c25" class="tk">FMSTR_LONG_INTR</a></td></tr>
+<tr name="722" id="722">
+<td>722</td><td><span class="pp">#if</span> <a id="722c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="723" id="723">
+<td>723</td><td></td></tr>
+<tr name="724" id="724">
+<td>724</td><td>  <a id="724c3" class="tk">FMSTR_SCI_DTXI</a>();                    <span class="ct">/* disable SCI transmit interrupt */</span></td></tr>
+<tr name="725" id="725">
+<td>725</td><td>  <a id="725c3" class="tk">FMSTR_SCI_ERXI</a>();                    <span class="ct">/* enable SCI receive interrupt */</span></td></tr>
+<tr name="726" id="726">
+<td>726</td><td></td></tr>
+<tr name="727" id="727">
+<td>727</td><td><span class="pp">#elif</span> <a id="727c7" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="728" id="728">
+<td>728</td><td></td></tr>
+<tr name="729" id="729">
+<td>729</td><td>  <a id="729c3" class="tk">FMSTR_JTAG_DTXI</a>();                   <span class="ct">/* disable JTAG transmit interrupt  */</span></td></tr>
+<tr name="730" id="730">
+<td>730</td><td>  <a id="730c3" class="tk">FMSTR_JTAG_ERXI</a>();                   <span class="ct">/* enable JTAG receive interrupt  */</span></td></tr>
+<tr name="731" id="731">
+<td>731</td><td></td></tr>
+<tr name="732" id="732">
+<td>732</td><td>  <span class="ct">/* RIE bit is forced low by HW until EONCE is first accessed, we will try again in FMSTR_Poll */</span></td></tr>
+<tr name="733" id="733">
+<td>733</td><td>  <span class="kw">if</span> (<a id="733c7" class="tk">!</a><a id="733c8" class="tk">FMSTR_JTAG_ERXI_CHECK</a>())</td></tr>
+<tr name="734" id="734">
+<td>734</td><td>    <a id="734c5" class="tk">pcm_wFlags</a>.<a id="734c16" class="tk">flg</a>.<a id="734c20" class="tk">bJtagRIEPending</a> = 1;</td></tr>
+<tr name="735" id="735">
+<td>735</td><td></td></tr>
+<tr name="736" id="736">
+<td>736</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_USE_SCI / FMSTR_USE_JTAG  */</span></td></tr>
+<tr name="737" id="737">
+<td>737</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_SHORT_INTR || FMSTR_LONG_INTR */</span></td></tr>
+<tr name="738" id="738">
+<td>738</td><td></td></tr>
+<tr name="739" id="739">
+<td>739</td><td><span class="br">}</span></td></tr>
+<tr name="740" id="740">
+<td>740</td><td></td></tr>
+<tr name="741" id="741">
+<td>741</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="742" id="742">
+<td>742</td><td></td></tr>
+<tr name="743" id="743">
+<td>743</td><td><span class="ct">/*!</span></td></tr>
+<tr name="744" id="744">
+<td>744</td><td><span class="ct"> *</span></td></tr>
+<tr name="745" id="745">
+<td>745</td><td><span class="ct"> * @brief    Send response of given error code (no data)</span></td></tr>
+<tr name="746" id="746">
+<td>746</td><td><span class="ct"> *</span></td></tr>
+<tr name="747" id="747">
+<td>747</td><td><span class="ct"> * @param    nErrCode - error code to be sent</span></td></tr>
+<tr name="748" id="748">
+<td>748</td><td><span class="ct"> *</span></td></tr>
+<tr name="749" id="749">
+<td>749</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="750" id="750">
+<td>750</td><td><span class="kw">static</span> <span class="kw">void</span> <a id="750c13" class="tk">FMSTR_SendError</a>(<a id="750c29" class="tk">FMSTR_BCHR</a> <a id="750c40" class="tk">nErrCode</a>)</td></tr>
+<tr name="751" id="751">
+<td>751</td><td><span class="br">{</span></td></tr>
+<tr name="752" id="752">
+<td>752</td><td>  <span class="ct">/* fill &amp; send single-byte response */</span></td></tr>
+<tr name="753" id="753">
+<td>753</td><td>  <a id="753c3" class="tk">*</a><a id="753c4" class="tk">pcm_pCommBuffer</a> = <a id="753c22" class="tk">nErrCode</a>;</td></tr>
+<tr name="754" id="754">
+<td>754</td><td>  <a id="754c3" class="tk">FMSTR_SendResponse</a>(<a id="754c22" class="tk">pcm_pCommBuffer</a>, 1U);</td></tr>
+<tr name="755" id="755">
+<td>755</td><td><span class="br">}</span></td></tr>
+<tr name="756" id="756">
+<td>756</td><td></td></tr>
+<tr name="757" id="757">
+<td>757</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="758" id="758">
+<td>758</td><td></td></tr>
+<tr name="759" id="759">
+<td>759</td><td><span class="ct">/*!</span></td></tr>
+<tr name="760" id="760">
+<td>760</td><td><span class="ct"> *</span></td></tr>
+<tr name="761" id="761">
+<td>761</td><td><span class="ct"> * @brief    Finalize transmit buffer before transmitting</span></td></tr>
+<tr name="762" id="762">
+<td>762</td><td><span class="ct"> *</span></td></tr>
+<tr name="763" id="763">
+<td>763</td><td><span class="ct"> * @param    nLength - response length (1 for status + data length)</span></td></tr>
+<tr name="764" id="764">
+<td>764</td><td><span class="ct"> *</span></td></tr>
+<tr name="765" id="765">
+<td>765</td><td><span class="ct"> *</span></td></tr>
+<tr name="766" id="766">
+<td>766</td><td><span class="ct"> * This Function takes the data already prepared in the transmit buffer</span></td></tr>
+<tr name="767" id="767">
+<td>767</td><td><span class="ct"> * (inlcuding the status byte). It computes the check sum and kicks on tx.</span></td></tr>
+<tr name="768" id="768">
+<td>768</td><td><span class="ct"> *</span></td></tr>
+<tr name="769" id="769">
+<td>769</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="770" id="770">
+<td>770</td><td><span class="kw">void</span> <a id="770c6" class="tk">FMSTR_SendResponse</a>(<a id="770c25" class="tk">FMSTR_BPTR</a> <a id="770c36" class="tk">pResponse</a>, <a id="770c47" class="tk">FMSTR_SIZE8</a> <a id="770c59" class="tk">nLength</a>)</td></tr>
+<tr name="771" id="771">
+<td>771</td><td><span class="br">{</span></td></tr>
+<tr name="772" id="772">
+<td>772</td><td>  <a id="772c3" class="tk">FMSTR_U16</a> <a id="772c13" class="tk">chSum</a> = 0U;</td></tr>
+<tr name="773" id="773">
+<td>773</td><td>  <a id="773c3" class="tk">FMSTR_U8</a> <a id="773c12" class="tk">i</a>, <a id="773c15" class="tk">c</a>;</td></tr>
+<tr name="774" id="774">
+<td>774</td><td></td></tr>
+<tr name="775" id="775">
+<td>775</td><td>  <span class="ct">/* remember the buffer to be sent */</span></td></tr>
+<tr name="776" id="776">
+<td>776</td><td>  <a id="776c3" class="tk">pcm_pTxBuff</a> = <a id="776c17" class="tk">pResponse</a>;</td></tr>
+<tr name="777" id="777">
+<td>777</td><td></td></tr>
+<tr name="778" id="778">
+<td>778</td><td>  <span class="ct">/* status byte and data are already there, compute checksum only     */</span></td></tr>
+<tr name="779" id="779">
+<td>779</td><td>  <span class="kw">for</span> (<a id="779c8" class="tk">i</a>=0U; <a id="779c14" class="tk">i</a><a id="779c15" class="tk">&lt;</a><a id="779c16" class="tk">nLength</a>; <a id="779c25" class="tk">i</a><a id="779c26" class="tk">++</a>) <span class="br">{</span></td></tr>
+<tr name="780" id="780">
+<td>780</td><td>    <a id="780c5" class="tk">c</a> = 0U;</td></tr>
+<tr name="781" id="781">
+<td>781</td><td>    <a id="781c5" class="tk">pResponse</a> = <a id="781c17" class="tk">FMSTR_ValueFromBuffer8</a>(<a id="781c40" class="tk">&amp;</a><a id="781c41" class="tk">c</a>, <a id="781c44" class="tk">pResponse</a>);</td></tr>
+<tr name="782" id="782">
+<td>782</td><td></td></tr>
+<tr name="783" id="783">
+<td>783</td><td>    <span class="ct">/* add character to checksum */</span></td></tr>
+<tr name="784" id="784">
+<td>784</td><td>    <a id="784c5" class="tk">chSum</a> <a id="784c11" class="tk">+=</a> <a id="784c14" class="tk">c</a>;</td></tr>
+<tr name="785" id="785">
+<td>785</td><td></td></tr>
+<tr name="786" id="786">
+<td>786</td><td>    <span class="ct">/* prevent saturation to happen on DSP platforms */</span></td></tr>
+<tr name="787" id="787">
+<td>787</td><td>    <a id="787c5" class="tk">chSum</a> <a id="787c11" class="tk">&amp;=</a> 0xffU;</td></tr>
+<tr name="788" id="788">
+<td>788</td><td>  <span class="br">}</span></td></tr>
+<tr name="789" id="789">
+<td>789</td><td></td></tr>
+<tr name="790" id="790">
+<td>790</td><td>  <span class="ct">/* store checksum after the message */</span></td></tr>
+<tr name="791" id="791">
+<td>791</td><td>  <a id="791c3" class="tk">pResponse</a> = <a id="791c15" class="tk">FMSTR_ValueToBuffer8</a>(<a id="791c36" class="tk">pResponse</a>, (<a id="791c48" class="tk">FMSTR_U8</a>) (((<a id="791c61" class="tk">FMSTR_U16</a>)<a id="791c71" class="tk">~</a>(<a id="791c73" class="tk">chSum</a>))</td></tr>
+<tr name="792" id="792">
+<td>792</td><td>    <a id="792c5" class="tk">+</a> 1U));</td></tr>
+<tr name="793" id="793">
+<td>793</td><td></td></tr>
+<tr name="794" id="794">
+<td>794</td><td>  <span class="ct">/* send the message and the checksum and the SOB */</span></td></tr>
+<tr name="795" id="795">
+<td>795</td><td>  <a id="795c3" class="tk">pcm_nTxTodo</a> = (<a id="795c18" class="tk">FMSTR_SIZE8</a>) (<a id="795c32" class="tk">nLength</a> <a id="795c40" class="tk">+</a> 1U);</td></tr>
+<tr name="796" id="796">
+<td>796</td><td></td></tr>
+<tr name="797" id="797">
+<td>797</td><td>  <span class="ct">/* now transmitting the response */</span></td></tr>
+<tr name="798" id="798">
+<td>798</td><td>  <a id="798c3" class="tk">pcm_wFlags</a>.<a id="798c14" class="tk">flg</a>.<a id="798c18" class="tk">bTxActive</a> = 1U;</td></tr>
+<tr name="799" id="799">
+<td>799</td><td></td></tr>
+<tr name="800" id="800">
+<td>800</td><td><span class="pp">#if</span> <a id="800c5" class="tk">FMSTR_USE_USB_CDC</a> <a id="800c23" class="tk">||</a> <a id="800c26" class="tk">FMSTR_USE_MQX_IO</a> <a id="800c43" class="tk">||</a> <a id="800c46" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="801" id="801">
+<td>801</td><td></td></tr>
+<tr name="802" id="802">
+<td>802</td><td>  <a id="802c3" class="tk">pcm_wFlags</a>.<a id="802c14" class="tk">flg</a>.<a id="802c18" class="tk">bTxFirstSobSend</a> = 1U;</td></tr>
+<tr name="803" id="803">
+<td>803</td><td></td></tr>
+<tr name="804" id="804">
+<td>804</td><td><span class="pp">#endif</span></td></tr>
+<tr name="805" id="805">
+<td>805</td><td></td></tr>
+<tr name="806" id="806">
+<td>806</td><td><span class="pp">#if</span> <a id="806c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="807" id="807">
+<td>807</td><td></td></tr>
+<tr name="808" id="808">
+<td>808</td><td>  <a id="808c3" class="tk">pcm_wFlags</a>.<a id="808c14" class="tk">flg</a>.<a id="808c18" class="tk">bTxWaitTC</a> = 0U;</td></tr>
+<tr name="809" id="809">
+<td>809</td><td></td></tr>
+<tr name="810" id="810">
+<td>810</td><td><span class="pp">#endif</span></td></tr>
+<tr name="811" id="811">
+<td>811</td><td></td></tr>
+<tr name="812" id="812">
+<td>812</td><td>  <span class="ct">/* do not replicate the initial SOB  */</span></td></tr>
+<tr name="813" id="813">
+<td>813</td><td>  <a id="813c3" class="tk">pcm_wFlags</a>.<a id="813c14" class="tk">flg</a>.<a id="813c18" class="tk">bTxLastCharSOB</a> = 0U;</td></tr>
+<tr name="814" id="814">
+<td>814</td><td></td></tr>
+<tr name="815" id="815">
+<td>815</td><td><span class="pp">#if</span> <a id="815c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="816" id="816">
+<td>816</td><td></td></tr>
+<tr name="817" id="817">
+<td>817</td><td>  <span class="br">{</span></td></tr>
+<tr name="818" id="818">
+<td>818</td><td>    <span class="ct">/*lint -esym(550, dummySR) */</span></td></tr>
+<tr name="819" id="819">
+<td>819</td><td>    <span class="kw">volatile</span> <a id="819c14" class="tk">FMSTR_SCISR</a> <a id="819c26" class="tk">dummySR</a>;</td></tr>
+<tr name="820" id="820">
+<td>820</td><td></td></tr>
+<tr name="821" id="821">
+<td>821</td><td>    <span class="ct">/* disable receiver, enable transmitter (single-wire communication) */</span></td></tr>
+<tr name="822" id="822">
+<td>822</td><td><span class="pp">#if</span> <a id="822c5" class="tk">!</a><a id="822c6" class="tk">FMSTR_SCI_TWOWIRE_ONLY</a></td></tr>
+<tr name="823" id="823">
+<td>823</td><td></td></tr>
+<tr name="824" id="824">
+<td>824</td><td>    <a id="824c5" class="tk">FMSTR_SCI_RD</a>();</td></tr>
+<tr name="825" id="825">
+<td>825</td><td>    <a id="825c5" class="tk">FMSTR_SCI_TE</a>();</td></tr>
+<tr name="826" id="826">
+<td>826</td><td></td></tr>
+<tr name="827" id="827">
+<td>827</td><td><span class="pp">#endif</span></td></tr>
+<tr name="828" id="828">
+<td>828</td><td></td></tr>
+<tr name="829" id="829">
+<td>829</td><td>    <span class="ct">/* kick on the SCI transmission (also clears TX Empty flag on some platforms) */</span></td></tr>
+<tr name="830" id="830">
+<td>830</td><td>    <a id="830c5" class="tk">dummySR</a> = <a id="830c15" class="tk">FMSTR_SCI_GETSR</a>();</td></tr>
+<tr name="831" id="831">
+<td>831</td><td>    <a id="831c5" class="tk">FMSTR_SCI_PUTCHAR</a>(<a id="831c23" class="tk">FMSTR_SOB</a>);</td></tr>
+<tr name="832" id="832">
+<td>832</td><td>  <span class="br">}</span></td></tr>
+<tr name="833" id="833">
+<td>833</td><td></td></tr>
+<tr name="834" id="834">
+<td>834</td><td><span class="pp">#elif</span> <a id="834c7" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="835" id="835">
+<td>835</td><td></td></tr>
+<tr name="836" id="836">
+<td>836</td><td>  <span class="ct">/* kick on the JTAG transmission */</span></td></tr>
+<tr name="837" id="837">
+<td>837</td><td>  <a id="837c3" class="tk">FMSTR_FlushJtagTx</a>();</td></tr>
+<tr name="838" id="838">
+<td>838</td><td></td></tr>
+<tr name="839" id="839">
+<td>839</td><td><span class="pp">#endif</span></td></tr>
+<tr name="840" id="840">
+<td>840</td><td></td></tr>
+<tr name="841" id="841">
+<td>841</td><td>  <span class="ct">/* TX interrupt enable, RX interrupt disable */</span></td></tr>
+<tr name="842" id="842">
+<td>842</td><td><span class="pp">#if</span> <a id="842c5" class="tk">FMSTR_LONG_INTR</a> <a id="842c21" class="tk">||</a> <a id="842c24" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="843" id="843">
+<td>843</td><td><span class="pp">#if</span> <a id="843c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="844" id="844">
+<td>844</td><td></td></tr>
+<tr name="845" id="845">
+<td>845</td><td>  <a id="845c3" class="tk">FMSTR_SCI_DRXI</a>();</td></tr>
+<tr name="846" id="846">
+<td>846</td><td>  <a id="846c3" class="tk">FMSTR_SCI_ETXI</a>();</td></tr>
+<tr name="847" id="847">
+<td>847</td><td></td></tr>
+<tr name="848" id="848">
+<td>848</td><td><span class="pp">#elif</span> <a id="848c7" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="849" id="849">
+<td>849</td><td><span class="pp">#if</span> <a id="849c5" class="tk">FMSTR_USE_JTAG_TXFIX</a></td></tr>
+<tr name="850" id="850">
+<td>850</td><td></td></tr>
+<tr name="851" id="851">
+<td>851</td><td>  <span class="ct">/* in TX-bugfix mode, keep the RX interrupt enabled as it */</span></td></tr>
+<tr name="852" id="852">
+<td>852</td><td>  <span class="ct">/* is used as "able-to-TX" notification from the PC */</span></td></tr>
+<tr name="853" id="853">
+<td>853</td><td>  <a id="853c3" class="tk">FMSTR_JTAG_ERXI</a>();</td></tr>
+<tr name="854" id="854">
+<td>854</td><td></td></tr>
+<tr name="855" id="855">
+<td>855</td><td><span class="pp">#else</span></td></tr>
+<tr name="856" id="856">
+<td>856</td><td></td></tr>
+<tr name="857" id="857">
+<td>857</td><td>  <span class="ct">/* otherwise, JTAG is very same as the SCI */</span></td></tr>
+<tr name="858" id="858">
+<td>858</td><td>  <span class="kw">if</span> (<a id="858c7" class="tk">pcm_wFlags</a>.<a id="858c18" class="tk">flg</a>.<a id="858c22" class="tk">bTxActive</a>)        <span class="ct">//enable TX interrupt only when is not one word response</span></td></tr>
+<tr name="859" id="859">
+<td>859</td><td>  <span class="br">{</span></td></tr>
+<tr name="860" id="860">
+<td>860</td><td>    <a id="860c5" class="tk">FMSTR_JTAG_DRXI</a>();</td></tr>
+<tr name="861" id="861">
+<td>861</td><td>    <a id="861c5" class="tk">FMSTR_JTAG_ETXI</a>();</td></tr>
+<tr name="862" id="862">
+<td>862</td><td>  <span class="br">}</span></td></tr>
+<tr name="863" id="863">
+<td>863</td><td></td></tr>
+<tr name="864" id="864">
+<td>864</td><td><span class="pp">#endif</span></td></tr>
+<tr name="865" id="865">
+<td>865</td><td></td></tr>
+<tr name="866" id="866">
+<td>866</td><td><span class="pp">#elif</span> <a id="866c7" class="tk">FMSTR_USE_USB_CDC</a></td></tr>
+<tr name="867" id="867">
+<td>867</td><td></td></tr>
+<tr name="868" id="868">
+<td>868</td><td>  <span class="kw">if</span> ((<a id="868c8" class="tk">pcm_wFlags</a>.<a id="868c19" class="tk">flg</a>.<a id="868c23" class="tk">bUsbCdcStartApp</a>) <a id="868c40" class="tk">&amp;&amp;</a> (<a id="868c44" class="tk">pcm_wFlags</a>.<a id="868c55" class="tk">flg</a>.<a id="868c59" class="tk">bTxActive</a>) <a id="868c70" class="tk">&amp;&amp;</a></td></tr>
+<tr name="869" id="869">
+<td>869</td><td>      (<a id="869c8" class="tk">pcm_wFlags</a>.<a id="869c19" class="tk">flg</a>.<a id="869c23" class="tk">bUsbCdcStartTrans</a>))<span class="ct">/* Finalize USB packet to transmit and send packet */</span></td></tr>
+<tr name="870" id="870">
+<td>870</td><td>    <a id="870c5" class="tk">FMSTR_SendUsbPacket</a>();</td></tr>
+<tr name="871" id="871">
+<td>871</td><td>  <span class="kw">else</span>                                 <span class="ct">/* Previous Send is complete. Queue next receive */</span></td></tr>
+<tr name="872" id="872">
+<td>872</td><td>    (<span class="kw">void</span>)<a id="872c11" class="tk">USB_Class_CDC_Interface_DIC_Recv_Data</a>(<a id="872c49" class="tk">FMSTR_USB_CDC_ID</a>, <a id="872c67" class="tk">NULL</a>, 0);</td></tr>
+<tr name="873" id="873">
+<td>873</td><td></td></tr>
+<tr name="874" id="874">
+<td>874</td><td><span class="pp">#endif</span></td></tr>
+<tr name="875" id="875">
+<td>875</td><td><span class="pp">#endif</span>                                 <span class="ct">/* FMSTR_LONG_INTR || FMSTR_SHORT_INTR */</span></td></tr>
+<tr name="876" id="876">
+<td>876</td><td></td></tr>
+<tr name="877" id="877">
+<td>877</td><td><span class="br">}</span></td></tr>
+<tr name="878" id="878">
+<td>878</td><td></td></tr>
+<tr name="879" id="879">
+<td>879</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="880" id="880">
+<td>880</td><td></td></tr>
+<tr name="881" id="881">
+<td>881</td><td><span class="ct">/*!</span></td></tr>
+<tr name="882" id="882">
+<td>882</td><td><span class="ct"> *</span></td></tr>
+<tr name="883" id="883">
+<td>883</td><td><span class="ct"> * @brief    Output buffer transmission</span></td></tr>
+<tr name="884" id="884">
+<td>884</td><td><span class="ct"> *</span></td></tr>
+<tr name="885" id="885">
+<td>885</td><td><span class="ct"> * @param  pTxChar  The character to be transmit</span></td></tr>
+<tr name="886" id="886">
+<td>886</td><td><span class="ct"> *</span></td></tr>
+<tr name="887" id="887">
+<td>887</td><td><span class="ct"> * get ready buffer(prepare data to send)</span></td></tr>
+<tr name="888" id="888">
+<td>888</td><td><span class="ct"> *</span></td></tr>
+<tr name="889" id="889">
+<td>889</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="890" id="890">
+<td>890</td><td><a id="890c1" class="tk">FMSTR_BOOL</a> <a id="890c12" class="tk">FMSTR_Tx</a>(<a id="890c21" class="tk">FMSTR_U8</a><a id="890c29" class="tk">*</a> <a id="890c31" class="tk">pTxChar</a>)</td></tr>
+<tr name="891" id="891">
+<td>891</td><td><span class="br">{</span></td></tr>
+<tr name="892" id="892">
+<td>892</td><td></td></tr>
+<tr name="893" id="893">
+<td>893</td><td><span class="pp">#if</span> <a id="893c5" class="tk">FMSTR_USE_USB_CDC</a> <a id="893c23" class="tk">||</a> <a id="893c26" class="tk">FMSTR_USE_MQX_IO</a> <a id="893c43" class="tk">||</a> <a id="893c46" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="894" id="894">
+<td>894</td><td></td></tr>
+<tr name="895" id="895">
+<td>895</td><td>  <span class="ct">/* to send first SOB byte*/</span></td></tr>
+<tr name="896" id="896">
+<td>896</td><td>  <span class="kw">if</span> (<a id="896c7" class="tk">pcm_wFlags</a>.<a id="896c18" class="tk">flg</a>.<a id="896c22" class="tk">bTxFirstSobSend</a>) <span class="br">{</span></td></tr>
+<tr name="897" id="897">
+<td>897</td><td>    <a id="897c5" class="tk">*</a><a id="897c6" class="tk">pTxChar</a> = <a id="897c16" class="tk">FMSTR_SOB</a>;</td></tr>
+<tr name="898" id="898">
+<td>898</td><td>    <a id="898c5" class="tk">pcm_wFlags</a>.<a id="898c16" class="tk">flg</a>.<a id="898c20" class="tk">bTxFirstSobSend</a> = 0U;</td></tr>
+<tr name="899" id="899">
+<td>899</td><td>    <span class="kw">return</span> <a id="899c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="900" id="900">
+<td>900</td><td>  <span class="br">}</span></td></tr>
+<tr name="901" id="901">
+<td>901</td><td></td></tr>
+<tr name="902" id="902">
+<td>902</td><td><span class="pp">#endif</span></td></tr>
+<tr name="903" id="903">
+<td>903</td><td></td></tr>
+<tr name="904" id="904">
+<td>904</td><td>  <span class="kw">if</span> (<a id="904c7" class="tk">pcm_nTxTodo</a>) <span class="br">{</span></td></tr>
+<tr name="905" id="905">
+<td>905</td><td>    <span class="ct">/* fetch &amp; send character ready to transmit */</span></td></tr>
+<tr name="906" id="906">
+<td>906</td><td>    <span class="ct">/*lint -e{534} ignoring return value */</span></td></tr>
+<tr name="907" id="907">
+<td>907</td><td>    <a id="907c5" class="tk">FMSTR_ValueFromBuffer8</a>(<a id="907c28" class="tk">pTxChar</a>, <a id="907c37" class="tk">pcm_pTxBuff</a>);</td></tr>
+<tr name="908" id="908">
+<td>908</td><td></td></tr>
+<tr name="909" id="909">
+<td>909</td><td>    <span class="ct">/* first, handle the replicated SOB characters */</span></td></tr>
+<tr name="910" id="910">
+<td>910</td><td>    <span class="kw">if</span> (<a id="910c9" class="tk">*</a><a id="910c10" class="tk">pTxChar</a> <a id="910c18" class="tk">==</a> <a id="910c21" class="tk">FMSTR_SOB</a>) <span class="br">{</span></td></tr>
+<tr name="911" id="911">
+<td>911</td><td>      <a id="911c7" class="tk">pcm_wFlags</a>.<a id="911c18" class="tk">flg</a>.<a id="911c22" class="tk">bTxLastCharSOB</a> <a id="911c37" class="tk">^=</a> 1U;</td></tr>
+<tr name="912" id="912">
+<td>912</td><td>      <span class="kw">if</span> ((<a id="912c12" class="tk">pcm_wFlags</a>.<a id="912c23" class="tk">flg</a>.<a id="912c27" class="tk">bTxLastCharSOB</a>)) <span class="br">{</span></td></tr>
+<tr name="913" id="913">
+<td>913</td><td>        <span class="ct">/* yes, repeat the SOB next time */</span></td></tr>
+<tr name="914" id="914">
+<td>914</td><td>        <span class="kw">return</span> <a id="914c16" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="915" id="915">
+<td>915</td><td>      <span class="br">}</span></td></tr>
+<tr name="916" id="916">
+<td>916</td><td>    <span class="br">}</span></td></tr>
+<tr name="917" id="917">
+<td>917</td><td></td></tr>
+<tr name="918" id="918">
+<td>918</td><td>    <span class="ct">/* no, advance tx buffer pointer */</span></td></tr>
+<tr name="919" id="919">
+<td>919</td><td>    <a id="919c5" class="tk">pcm_nTxTodo</a><a id="919c16" class="tk">--</a>;</td></tr>
+<tr name="920" id="920">
+<td>920</td><td>    <a id="920c5" class="tk">pcm_pTxBuff</a> = <a id="920c19" class="tk">FMSTR_SkipInBuffer</a>(<a id="920c38" class="tk">pcm_pTxBuff</a>, 1U);</td></tr>
+<tr name="921" id="921">
+<td>921</td><td>    <span class="kw">return</span> <a id="921c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="922" id="922">
+<td>922</td><td>  <span class="br">}</span></td></tr>
+<tr name="923" id="923">
+<td>923</td><td></td></tr>
+<tr name="924" id="924">
+<td>924</td><td>  <span class="ct">/* when SCI TX buffering is enabled, we must first wait until all</span></td></tr>
+<tr name="925" id="925">
+<td>925</td><td><span class="ct">     characters are physically transmitted (before disabling transmitter) */</span></td></tr>
+<tr name="926" id="926">
+<td>926</td><td><span class="pp">#if</span> <a id="926c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="927" id="927">
+<td>927</td><td><span class="pp">#if</span> <a id="927c5" class="tk">FMSTR_SCI_HAS_TXQUEUE</a></td></tr>
+<tr name="928" id="928">
+<td>928</td><td></td></tr>
+<tr name="929" id="929">
+<td>929</td><td>  <a id="929c3" class="tk">pcm_wFlags</a>.<a id="929c14" class="tk">flg</a>.<a id="929c18" class="tk">bTxWaitTC</a> = 1;</td></tr>
+<tr name="930" id="930">
+<td>930</td><td></td></tr>
+<tr name="931" id="931">
+<td>931</td><td>  <span class="ct">/* wait for SCI TC interrupt */</span></td></tr>
+<tr name="932" id="932">
+<td>932</td><td><span class="pp">#if</span> <a id="932c5" class="tk">FMSTR_SHORT_INTR</a> <a id="932c22" class="tk">||</a> <a id="932c25" class="tk">FMSTR_LONG_INTR</a></td></tr>
+<tr name="933" id="933">
+<td>933</td><td></td></tr>
+<tr name="934" id="934">
+<td>934</td><td>  <a id="934c3" class="tk">FMSTR_SCI_ETCI</a>();</td></tr>
+<tr name="935" id="935">
+<td>935</td><td></td></tr>
+<tr name="936" id="936">
+<td>936</td><td><span class="pp">#endif</span></td></tr>
+<tr name="937" id="937">
+<td>937</td><td></td></tr>
+<tr name="938" id="938">
+<td>938</td><td><span class="pp">#else</span></td></tr>
+<tr name="939" id="939">
+<td>939</td><td></td></tr>
+<tr name="940" id="940">
+<td>940</td><td>  <span class="ct">/* start listening immediately */</span></td></tr>
+<tr name="941" id="941">
+<td>941</td><td>  <a id="941c3" class="tk">FMSTR_Listen</a>();</td></tr>
+<tr name="942" id="942">
+<td>942</td><td></td></tr>
+<tr name="943" id="943">
+<td>943</td><td><span class="pp">#endif</span></td></tr>
+<tr name="944" id="944">
+<td>944</td><td></td></tr>
+<tr name="945" id="945">
+<td>945</td><td><span class="pp">#else</span></td></tr>
+<tr name="946" id="946">
+<td>946</td><td></td></tr>
+<tr name="947" id="947">
+<td>947</td><td>  <span class="ct">/* start listening immediately */</span></td></tr>
+<tr name="948" id="948">
+<td>948</td><td>  <a id="948c3" class="tk">FMSTR_Listen</a>();</td></tr>
+<tr name="949" id="949">
+<td>949</td><td></td></tr>
+<tr name="950" id="950">
+<td>950</td><td><span class="pp">#endif</span></td></tr>
+<tr name="951" id="951">
+<td>951</td><td></td></tr>
+<tr name="952" id="952">
+<td>952</td><td>  <span class="kw">return</span> <a id="952c10" class="tk">FMSTR_TRUE</a>;</td></tr>
+<tr name="953" id="953">
+<td>953</td><td><span class="br">}</span></td></tr>
+<tr name="954" id="954">
+<td>954</td><td></td></tr>
+<tr name="955" id="955">
+<td>955</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="956" id="956">
+<td>956</td><td></td></tr>
+<tr name="957" id="957">
+<td>957</td><td><span class="ct">/*!</span></td></tr>
+<tr name="958" id="958">
+<td>958</td><td><span class="ct"> *</span></td></tr>
+<tr name="959" id="959">
+<td>959</td><td><span class="ct"> * @brief  Handle received character</span></td></tr>
+<tr name="960" id="960">
+<td>960</td><td><span class="ct"> *</span></td></tr>
+<tr name="961" id="961">
+<td>961</td><td><span class="ct"> * @param  nRxChar  The character to be processed</span></td></tr>
+<tr name="962" id="962">
+<td>962</td><td><span class="ct"> *</span></td></tr>
+<tr name="963" id="963">
+<td>963</td><td><span class="ct"> * Handle the character received and -if the message is complete- call the</span></td></tr>
+<tr name="964" id="964">
+<td>964</td><td><span class="ct"> * protocol decode routine.</span></td></tr>
+<tr name="965" id="965">
+<td>965</td><td><span class="ct"> *</span></td></tr>
+<tr name="966" id="966">
+<td>966</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="967" id="967">
+<td>967</td><td><a id="967c1" class="tk">FMSTR_BOOL</a> <a id="967c12" class="tk">FMSTR_Rx</a>(<a id="967c21" class="tk">FMSTR_BCHR</a> <a id="967c32" class="tk">nRxChar</a>)</td></tr>
+<tr name="968" id="968">
+<td>968</td><td><span class="br">{</span></td></tr>
+<tr name="969" id="969">
+<td>969</td><td>  <a id="969c3" class="tk">FMSTR_SERIAL_FLAGS</a> <a id="969c22" class="tk">*</a> <a id="969c24" class="tk">pflg</a> = <a id="969c31" class="tk">&amp;</a><a id="969c32" class="tk">pcm_wFlags</a>;</td></tr>
+<tr name="970" id="970">
+<td>970</td><td></td></tr>
+<tr name="971" id="971">
+<td>971</td><td>  <span class="ct">/* first, handle the replicated SOB characters */</span></td></tr>
+<tr name="972" id="972">
+<td>972</td><td>  <span class="kw">if</span> (<a id="972c7" class="tk">nRxChar</a> <a id="972c15" class="tk">==</a> <a id="972c18" class="tk">FMSTR_SOB</a>) <span class="br">{</span></td></tr>
+<tr name="973" id="973">
+<td>973</td><td>    <a id="973c5" class="tk">pflg</a>-&gt;<a id="973c11" class="tk">flg</a>.<a id="973c15" class="tk">bRxLastCharSOB</a> <a id="973c30" class="tk">^=</a> 1;</td></tr>
+<tr name="974" id="974">
+<td>974</td><td>    <span class="kw">if</span> (<a id="974c9" class="tk">pflg</a>-&gt;<a id="974c15" class="tk">flg</a>.<a id="974c19" class="tk">bRxLastCharSOB</a>) <span class="br">{</span></td></tr>
+<tr name="975" id="975">
+<td>975</td><td>      <span class="ct">/* this is either the first byte of replicated SOB or a  */</span></td></tr>
+<tr name="976" id="976">
+<td>976</td><td>      <span class="ct">/* real Start-of-Block mark - we will decide next time in FMSTR_Rx */</span></td></tr>
+<tr name="977" id="977">
+<td>977</td><td>      <span class="kw">return</span> <a id="977c14" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="978" id="978">
+<td>978</td><td>    <span class="br">}</span></td></tr>
+<tr name="979" id="979">
+<td>979</td><td>  <span class="br">}</span></td></tr>
+<tr name="980" id="980">
+<td>980</td><td></td></tr>
+<tr name="981" id="981">
+<td>981</td><td>  <span class="ct">/* we have got a common character preceded by the SOB -  */</span></td></tr>
+<tr name="982" id="982">
+<td>982</td><td>  <span class="ct">/* this is the command code! */</span></td></tr>
+<tr name="983" id="983">
+<td>983</td><td>  <span class="kw">if</span> (<a id="983c7" class="tk">pflg</a>-&gt;<a id="983c13" class="tk">flg</a>.<a id="983c17" class="tk">bRxLastCharSOB</a>) <span class="br">{</span></td></tr>
+<tr name="984" id="984">
+<td>984</td><td>    <span class="ct">/* reset receiving process */</span></td></tr>
+<tr name="985" id="985">
+<td>985</td><td>    <a id="985c5" class="tk">pcm_pRxBuff</a> = <a id="985c19" class="tk">pcm_pCommBuffer</a>;</td></tr>
+<tr name="986" id="986">
+<td>986</td><td>    <a id="986c5" class="tk">*</a><a id="986c6" class="tk">pcm_pRxBuff</a><a id="986c17" class="tk">++</a> = <a id="986c22" class="tk">nRxChar</a>;</td></tr>
+<tr name="987" id="987">
+<td>987</td><td></td></tr>
+<tr name="988" id="988">
+<td>988</td><td>    <span class="ct">/* start computing the checksum */</span></td></tr>
+<tr name="989" id="989">
+<td>989</td><td>    <a id="989c5" class="tk">pcm_nRxCheckSum</a> = <a id="989c23" class="tk">nRxChar</a>;</td></tr>
+<tr name="990" id="990">
+<td>990</td><td>    <a id="990c5" class="tk">pcm_nRxTodo</a> = 0U;</td></tr>
+<tr name="991" id="991">
+<td>991</td><td></td></tr>
+<tr name="992" id="992">
+<td>992</td><td>    <span class="ct">/* if the standard command was received, the message length will come in next byte */</span></td></tr>
+<tr name="993" id="993">
+<td>993</td><td>    <a id="993c5" class="tk">pflg</a>-&gt;<a id="993c11" class="tk">flg</a>.<a id="993c15" class="tk">bRxMsgLengthNext</a> = 1U;</td></tr>
+<tr name="994" id="994">
+<td>994</td><td></td></tr>
+<tr name="995" id="995">
+<td>995</td><td>    <span class="ct">/* fast command? */</span></td></tr>
+<tr name="996" id="996">
+<td>996</td><td>    <span class="kw">if</span> (<a id="996c9" class="tk">!</a>((<a id="996c12" class="tk">~</a><a id="996c13" class="tk">nRxChar</a>) <a id="996c22" class="tk">&amp;</a> <a id="996c24" class="tk">FMSTR_FASTCMD</a>)) <span class="br">{</span></td></tr>
+<tr name="997" id="997">
+<td>997</td><td>      <span class="ct">/* fast command received, there will be no length information */</span></td></tr>
+<tr name="998" id="998">
+<td>998</td><td>      <a id="998c7" class="tk">pflg</a>-&gt;<a id="998c13" class="tk">flg</a>.<a id="998c17" class="tk">bRxMsgLengthNext</a> = 0U;</td></tr>
+<tr name="999" id="999">
+<td>999</td><td></td></tr>
+<tr name="1000" id="1000">
+<td>1000</td><td>      <span class="ct">/* as it is encoded in the command byte directly */</span></td></tr>
+<tr name="1001" id="1001">
+<td>1001</td><td>      <a id="1001c7" class="tk">pcm_nRxTodo</a> = (<a id="1001c22" class="tk">FMSTR_SIZE8</a>)</td></tr>
+<tr name="1002" id="1002">
+<td>1002</td><td>        (((((<a id="1002c14" class="tk">FMSTR_SIZE8</a>)<a id="1002c26" class="tk">nRxChar</a>) <a id="1002c35" class="tk">&amp;</a> <a id="1002c37" class="tk">FMSTR_FASTCMD_DATALEN_MASK</a>) <a id="1002c65" class="tk">&gt;&gt;</a></td></tr>
+<tr name="1003" id="1003">
+<td>1003</td><td>          <a id="1003c11" class="tk">FMSTR_FASTCMD_DATALEN_SHIFT</a>) <a id="1003c40" class="tk">+</a> 1U);</td></tr>
+<tr name="1004" id="1004">
+<td>1004</td><td>    <span class="br">}</span></td></tr>
+<tr name="1005" id="1005">
+<td>1005</td><td></td></tr>
+<tr name="1006" id="1006">
+<td>1006</td><td>    <span class="ct">/* command code stored &amp; processed */</span></td></tr>
+<tr name="1007" id="1007">
+<td>1007</td><td>    <a id="1007c5" class="tk">pflg</a>-&gt;<a id="1007c11" class="tk">flg</a>.<a id="1007c15" class="tk">bRxLastCharSOB</a> = 0U;</td></tr>
+<tr name="1008" id="1008">
+<td>1008</td><td>    <span class="kw">return</span> <a id="1008c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="1009" id="1009">
+<td>1009</td><td>  <span class="br">}</span></td></tr>
+<tr name="1010" id="1010">
+<td>1010</td><td></td></tr>
+<tr name="1011" id="1011">
+<td>1011</td><td>  <span class="ct">/* we are waiting for the length byte */</span></td></tr>
+<tr name="1012" id="1012">
+<td>1012</td><td>  <span class="kw">if</span> (<a id="1012c7" class="tk">pflg</a>-&gt;<a id="1012c13" class="tk">flg</a>.<a id="1012c17" class="tk">bRxMsgLengthNext</a>) <span class="br">{</span></td></tr>
+<tr name="1013" id="1013">
+<td>1013</td><td>    <span class="ct">/* this byte, total data length and the checksum */</span></td></tr>
+<tr name="1014" id="1014">
+<td>1014</td><td>    <a id="1014c5" class="tk">pcm_nRxTodo</a> = (<a id="1014c20" class="tk">FMSTR_SIZE8</a>) (1U <a id="1014c37" class="tk">+</a> ((<a id="1014c41" class="tk">FMSTR_SIZE8</a>)<a id="1014c53" class="tk">nRxChar</a>) <a id="1014c62" class="tk">+</a> 1U);</td></tr>
+<tr name="1015" id="1015">
+<td>1015</td><td></td></tr>
+<tr name="1016" id="1016">
+<td>1016</td><td>    <span class="ct">/* now read the data bytes */</span></td></tr>
+<tr name="1017" id="1017">
+<td>1017</td><td>    <a id="1017c5" class="tk">pflg</a>-&gt;<a id="1017c11" class="tk">flg</a>.<a id="1017c15" class="tk">bRxMsgLengthNext</a> = 0U;</td></tr>
+<tr name="1018" id="1018">
+<td>1018</td><td>  <span class="br">}</span></td></tr>
+<tr name="1019" id="1019">
+<td>1019</td><td></td></tr>
+<tr name="1020" id="1020">
+<td>1020</td><td>  <span class="ct">/* waiting for a data byte? */</span></td></tr>
+<tr name="1021" id="1021">
+<td>1021</td><td>  <span class="kw">if</span> (<a id="1021c7" class="tk">pcm_nRxTodo</a>) <span class="br">{</span></td></tr>
+<tr name="1022" id="1022">
+<td>1022</td><td>    <span class="ct">/* add this byte to checksum */</span></td></tr>
+<tr name="1023" id="1023">
+<td>1023</td><td>    <a id="1023c5" class="tk">pcm_nRxCheckSum</a> <a id="1023c21" class="tk">+=</a> <a id="1023c24" class="tk">nRxChar</a>;</td></tr>
+<tr name="1024" id="1024">
+<td>1024</td><td></td></tr>
+<tr name="1025" id="1025">
+<td>1025</td><td>    <span class="ct">/* decrease number of expected bytes */</span></td></tr>
+<tr name="1026" id="1026">
+<td>1026</td><td>    <a id="1026c5" class="tk">pcm_nRxTodo</a><a id="1026c16" class="tk">--</a>;</td></tr>
+<tr name="1027" id="1027">
+<td>1027</td><td></td></tr>
+<tr name="1028" id="1028">
+<td>1028</td><td>    <span class="ct">/* was it the last byte of the message (checksum)? */</span></td></tr>
+<tr name="1029" id="1029">
+<td>1029</td><td>    <span class="kw">if</span> (<a id="1029c9" class="tk">!</a><a id="1029c10" class="tk">pcm_nRxTodo</a>) <span class="br">{</span></td></tr>
+<tr name="1030" id="1030">
+<td>1030</td><td>      <span class="ct">/* receive buffer overflow? */</span></td></tr>
+<tr name="1031" id="1031">
+<td>1031</td><td>      <span class="kw">if</span> (<a id="1031c11" class="tk">pcm_pRxBuff</a> <a id="1031c23" class="tk">==</a> <a id="1031c26" class="tk">NULL</a>) <span class="br">{</span></td></tr>
+<tr name="1032" id="1032">
+<td>1032</td><td>        <a id="1032c9" class="tk">FMSTR_SendError</a>(<a id="1032c25" class="tk">FMSTR_STC_CMDTOOLONG</a>);</td></tr>
+<tr name="1033" id="1033">
+<td>1033</td><td>      <span class="br">}</span></td></tr>
+<tr name="1034" id="1034">
+<td>1034</td><td></td></tr>
+<tr name="1035" id="1035">
+<td>1035</td><td>      <span class="ct">/* checksum error? */</span></td></tr>
+<tr name="1036" id="1036">
+<td>1036</td><td>      <span class="kw">else</span> <span class="kw">if</span> ((<a id="1036c17" class="tk">pcm_nRxCheckSum</a> <a id="1036c33" class="tk">&amp;</a> 0xffU) <a id="1036c42" class="tk">!=</a> 0U) <span class="br">{</span></td></tr>
+<tr name="1037" id="1037">
+<td>1037</td><td>        <a id="1037c9" class="tk">FMSTR_SendError</a>(<a id="1037c25" class="tk">FMSTR_STC_CMDCSERR</a>);</td></tr>
+<tr name="1038" id="1038">
+<td>1038</td><td>      <span class="br">}</span></td></tr>
+<tr name="1039" id="1039">
+<td>1039</td><td></td></tr>
+<tr name="1040" id="1040">
+<td>1040</td><td>      <span class="ct">/* message is okay */</span></td></tr>
+<tr name="1041" id="1041">
+<td>1041</td><td>      <span class="kw">else</span> <span class="br">{</span></td></tr>
+<tr name="1042" id="1042">
+<td>1042</td><td></td></tr>
+<tr name="1043" id="1043">
+<td>1043</td><td><span class="pp">#if</span> <a id="1043c5" class="tk">FMSTR_USE_USB_CDC</a> <a id="1043c23" class="tk">&amp;&amp;</a> <a id="1043c26" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="1044" id="1044">
+<td>1044</td><td></td></tr>
+<tr name="1045" id="1045">
+<td>1045</td><td>        <span class="ct">/* Decode protocol and send response in Poll function */</span></td></tr>
+<tr name="1046" id="1046">
+<td>1046</td><td>        <a id="1046c9" class="tk">pflg</a>-&gt;<a id="1046c15" class="tk">flg</a>.<a id="1046c19" class="tk">bUsbReadyToDecode</a> = 1U;</td></tr>
+<tr name="1047" id="1047">
+<td>1047</td><td></td></tr>
+<tr name="1048" id="1048">
+<td>1048</td><td><span class="pp">#else</span></td></tr>
+<tr name="1049" id="1049">
+<td>1049</td><td></td></tr>
+<tr name="1050" id="1050">
+<td>1050</td><td>        <span class="ct">/* do decode now! */</span></td></tr>
+<tr name="1051" id="1051">
+<td>1051</td><td>        <a id="1051c9" class="tk">FMSTR_ProtocolDecoder</a>(<a id="1051c31" class="tk">pcm_pCommBuffer</a>);</td></tr>
+<tr name="1052" id="1052">
+<td>1052</td><td></td></tr>
+<tr name="1053" id="1053">
+<td>1053</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1054" id="1054">
+<td>1054</td><td></td></tr>
+<tr name="1055" id="1055">
+<td>1055</td><td>      <span class="br">}</span></td></tr>
+<tr name="1056" id="1056">
+<td>1056</td><td></td></tr>
+<tr name="1057" id="1057">
+<td>1057</td><td>      <span class="kw">return</span> <a id="1057c14" class="tk">FMSTR_TRUE</a>;</td></tr>
+<tr name="1058" id="1058">
+<td>1058</td><td>    <span class="br">}</span></td></tr>
+<tr name="1059" id="1059">
+<td>1059</td><td></td></tr>
+<tr name="1060" id="1060">
+<td>1060</td><td>    <span class="ct">/* not the last character yet */</span></td></tr>
+<tr name="1061" id="1061">
+<td>1061</td><td>    <span class="kw">else</span> <span class="br">{</span></td></tr>
+<tr name="1062" id="1062">
+<td>1062</td><td>      <span class="ct">/* is there still a space in the buffer? */</span></td></tr>
+<tr name="1063" id="1063">
+<td>1063</td><td>      <span class="kw">if</span> (<a id="1063c11" class="tk">pcm_pRxBuff</a>) <span class="br">{</span></td></tr>
+<tr name="1064" id="1064">
+<td>1064</td><td>        <span class="ct">/*lint -e{946} pointer arithmetic is okay here (same array) */</span></td></tr>
+<tr name="1065" id="1065">
+<td>1065</td><td>        <span class="kw">if</span> (<a id="1065c13" class="tk">pcm_pRxBuff</a> <a id="1065c25" class="tk">&lt;</a> (<a id="1065c28" class="tk">pcm_pCommBuffer</a> <a id="1065c44" class="tk">+</a> <a id="1065c46" class="tk">FMSTR_COMM_BUFFER_SIZE</a>)) <span class="br">{</span></td></tr>
+<tr name="1066" id="1066">
+<td>1066</td><td>          <span class="ct">/* store byte  */</span></td></tr>
+<tr name="1067" id="1067">
+<td>1067</td><td>          <a id="1067c11" class="tk">*</a><a id="1067c12" class="tk">pcm_pRxBuff</a><a id="1067c23" class="tk">++</a> = <a id="1067c28" class="tk">nRxChar</a>;</td></tr>
+<tr name="1068" id="1068">
+<td>1068</td><td>        <span class="br">}</span></td></tr>
+<tr name="1069" id="1069">
+<td>1069</td><td></td></tr>
+<tr name="1070" id="1070">
+<td>1070</td><td>        <span class="ct">/* buffer is full! */</span></td></tr>
+<tr name="1071" id="1071">
+<td>1071</td><td>        <span class="kw">else</span> <span class="br">{</span></td></tr>
+<tr name="1072" id="1072">
+<td>1072</td><td>          <span class="ct">/* NULL rx pointer means buffer overflow - but we still need */</span></td></tr>
+<tr name="1073" id="1073">
+<td>1073</td><td>          <span class="ct">/* to receive all message characters (for the single-wire mode) */</span></td></tr>
+<tr name="1074" id="1074">
+<td>1074</td><td>          <span class="ct">/* so keep "receiving" - but throw away all characters from now */</span></td></tr>
+<tr name="1075" id="1075">
+<td>1075</td><td>          <a id="1075c11" class="tk">pcm_pRxBuff</a> = <a id="1075c25" class="tk">NULL</a>;</td></tr>
+<tr name="1076" id="1076">
+<td>1076</td><td>        <span class="br">}</span></td></tr>
+<tr name="1077" id="1077">
+<td>1077</td><td>      <span class="br">}</span></td></tr>
+<tr name="1078" id="1078">
+<td>1078</td><td>    <span class="br">}</span></td></tr>
+<tr name="1079" id="1079">
+<td>1079</td><td>  <span class="br">}</span></td></tr>
+<tr name="1080" id="1080">
+<td>1080</td><td></td></tr>
+<tr name="1081" id="1081">
+<td>1081</td><td>  <span class="kw">return</span> <a id="1081c10" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="1082" id="1082">
+<td>1082</td><td><span class="br">}</span></td></tr>
+<tr name="1083" id="1083">
+<td>1083</td><td></td></tr>
+<tr name="1084" id="1084">
+<td>1084</td><td><span class="ct">/**************************************************************************/</span></td></tr>
+<tr name="1085" id="1085">
+<td>1085</td><td></td></tr>
+<tr name="1086" id="1086">
+<td>1086</td><td><span class="ct">/*!</span></td></tr>
+<tr name="1087" id="1087">
+<td>1087</td><td><span class="ct"> *</span></td></tr>
+<tr name="1088" id="1088">
+<td>1088</td><td><span class="ct"> * @brief    Serial communication initialization</span></td></tr>
+<tr name="1089" id="1089">
+<td>1089</td><td><span class="ct"> *</span></td></tr>
+<tr name="1090" id="1090">
+<td>1090</td><td><span class="ct"> ******************************************************************************/</span></td></tr>
+<tr name="1091" id="1091">
+<td>1091</td><td><a id="1091c1" class="tk">FMSTR_BOOL</a> <a id="1091c12" class="tk">FMSTR_InitSerial</a>(<span class="kw">void</span>)</td></tr>
+<tr name="1092" id="1092">
+<td>1092</td><td><span class="br">{</span></td></tr>
+<tr name="1093" id="1093">
+<td>1093</td><td>  <span class="ct">/* initialize all state variables */</span></td></tr>
+<tr name="1094" id="1094">
+<td>1094</td><td>  <a id="1094c3" class="tk">pcm_wFlags</a>.<a id="1094c14" class="tk">all</a> = 0U;</td></tr>
+<tr name="1095" id="1095">
+<td>1095</td><td>  <a id="1095c3" class="tk">pcm_nTxTodo</a> = 0U;</td></tr>
+<tr name="1096" id="1096">
+<td>1096</td><td></td></tr>
+<tr name="1097" id="1097">
+<td>1097</td><td>  <span class="ct">/* Initialize SCI and JTAG interface */</span></td></tr>
+<tr name="1098" id="1098">
+<td>1098</td><td><span class="pp">#if</span> <a id="1098c5" class="tk">FMSTR_USE_SCI</a> <a id="1098c19" class="tk">&amp;&amp;</a> <a id="1098c22" class="tk">FMSTR_SCI_TWOWIRE_ONLY</a></td></tr>
+<tr name="1099" id="1099">
+<td>1099</td><td></td></tr>
+<tr name="1100" id="1100">
+<td>1100</td><td>  <span class="ct">/* to enable TX and RX together in FreeMASTER initialization */</span></td></tr>
+<tr name="1101" id="1101">
+<td>1101</td><td>  <a id="1101c3" class="tk">FMSTR_SCI_TE_RE</a>();</td></tr>
+<tr name="1102" id="1102">
+<td>1102</td><td></td></tr>
+<tr name="1103" id="1103">
+<td>1103</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1104" id="1104">
+<td>1104</td><td></td></tr>
+<tr name="1105" id="1105">
+<td>1105</td><td><span class="pp">#if</span> <a id="1105c5" class="tk">FMSTR_SHORT_INTR</a> <a id="1105c22" class="tk">&amp;</a> (<a id="1105c25" class="tk">FMSTR_USE_SCI</a> <a id="1105c39" class="tk">||</a> <a id="1105c42" class="tk">FMSTR_USE_JTAG</a>)</td></tr>
+<tr name="1106" id="1106">
+<td>1106</td><td></td></tr>
+<tr name="1107" id="1107">
+<td>1107</td><td>  <a id="1107c3" class="tk">pcm_pRQueueRP</a> = <a id="1107c19" class="tk">pcm_pRQueueBuffer</a>;</td></tr>
+<tr name="1108" id="1108">
+<td>1108</td><td>  <a id="1108c3" class="tk">pcm_pRQueueWP</a> = <a id="1108c19" class="tk">pcm_pRQueueBuffer</a>;</td></tr>
+<tr name="1109" id="1109">
+<td>1109</td><td></td></tr>
+<tr name="1110" id="1110">
+<td>1110</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1111" id="1111">
+<td>1111</td><td></td></tr>
+<tr name="1112" id="1112">
+<td>1112</td><td><span class="pp">#if</span> <a id="1112c5" class="tk">FMSTR_USE_MQX_IO</a></td></tr>
+<tr name="1113" id="1113">
+<td>1113</td><td></td></tr>
+<tr name="1114" id="1114">
+<td>1114</td><td>  <span class="kw">if</span> (<a id="1114c7" class="tk">!</a><a id="1114c8" class="tk">FMSTR_InitMQX</a>())</td></tr>
+<tr name="1115" id="1115">
+<td>1115</td><td>    <span class="kw">return</span> <a id="1115c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="1116" id="1116">
+<td>1116</td><td></td></tr>
+<tr name="1117" id="1117">
+<td>1117</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1118" id="1118">
+<td>1118</td><td></td></tr>
+<tr name="1119" id="1119">
+<td>1119</td><td><span class="pp">#if</span> <a id="1119c5" class="tk">FMSTR_USE_USB_CDC</a></td></tr>
+<tr name="1120" id="1120">
+<td>1120</td><td></td></tr>
+<tr name="1121" id="1121">
+<td>1121</td><td>  <span class="kw">if</span> (<a id="1121c7" class="tk">!</a><a id="1121c8" class="tk">FMSTR_InitUSB</a>())</td></tr>
+<tr name="1122" id="1122">
+<td>1122</td><td>    <span class="kw">return</span> <a id="1122c12" class="tk">FMSTR_FALSE</a>;</td></tr>
+<tr name="1123" id="1123">
+<td>1123</td><td></td></tr>
+<tr name="1124" id="1124">
+<td>1124</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1125" id="1125">
+<td>1125</td><td></td></tr>
+<tr name="1126" id="1126">
+<td>1126</td><td>  <span class="ct">/* start listening for commands */</span></td></tr>
+<tr name="1127" id="1127">
+<td>1127</td><td>  <a id="1127c3" class="tk">FMSTR_Listen</a>();</td></tr>
+<tr name="1128" id="1128">
+<td>1128</td><td>  <span class="kw">return</span> <a id="1128c10" class="tk">FMSTR_TRUE</a>;</td></tr>
+<tr name="1129" id="1129">
+<td>1129</td><td><span class="br">}</span></td></tr>
+<tr name="1130" id="1130">
+<td>1130</td><td></td></tr>
+<tr name="1131" id="1131">
+<td>1131</td><td><span class="ct">/*******************************************************************************</span></td></tr>
+<tr name="1132" id="1132">
+<td>1132</td><td><span class="ct"> *</span></td></tr>
+<tr name="1133" id="1133">
+<td>1133</td><td><span class="ct"> * @brief    API: Main "Polling" call from the application main loop</span></td></tr>
+<tr name="1134" id="1134">
+<td>1134</td><td><span class="ct"> *</span></td></tr>
+<tr name="1135" id="1135">
+<td>1135</td><td><span class="ct"> * This function either handles all the SCI communication (polling-only mode =</span></td></tr>
+<tr name="1136" id="1136">
+<td>1136</td><td><span class="ct"> * FMSTR_POLL_DRIVEN) or decodes messages received on the background by SCI interrupt</span></td></tr>
+<tr name="1137" id="1137">
+<td>1137</td><td><span class="ct"> * (short-interrupt mode = FMSTR_SHORT_INTR).</span></td></tr>
+<tr name="1138" id="1138">
+<td>1138</td><td><span class="ct"> *</span></td></tr>
+<tr name="1139" id="1139">
+<td>1139</td><td><span class="ct"> * In the JTAG interrupt-driven mode (both short and long), this function also checks</span></td></tr>
+<tr name="1140" id="1140">
+<td>1140</td><td><span class="ct"> * if setting the JTAG RIE bit failed recently. This may happen because of the</span></td></tr>
+<tr name="1141" id="1141">
+<td>1141</td><td><span class="ct"> * RIE is held low by the EONCE hardware until the EONCE is first accessed from host.</span></td></tr>
+<tr name="1142" id="1142">
+<td>1142</td><td><span class="ct"> * FMSTR_Init (-&gt;FMSTR_Listen) is often called while the PC-side FreeMASTER is still</span></td></tr>
+<tr name="1143" id="1143">
+<td>1143</td><td><span class="ct"> * turned off. So really, the JTAG is not enabled by this time and RIE bit is not set.</span></td></tr>
+<tr name="1144" id="1144">
+<td>1144</td><td><span class="ct"> * This problem is detected (see how bJtagRIEPending is set above in FSMTR_Listen)</span></td></tr>
+<tr name="1145" id="1145">
+<td>1145</td><td><span class="ct"> * and it is tried to be fixed periodically here in FMSTR_Poll.</span></td></tr>
+<tr name="1146" id="1146">
+<td>1146</td><td><span class="ct"> *</span></td></tr>
+<tr name="1147" id="1147">
+<td>1147</td><td><span class="ct"> *******************************************************************************/</span></td></tr>
+<tr name="1148" id="1148">
+<td>1148</td><td><span class="kw">void</span> <a id="1148c6" class="tk">FMSTR_Poll</a>(<span class="kw">void</span>)</td></tr>
+<tr name="1149" id="1149">
+<td>1149</td><td><span class="br">{</span></td></tr>
+<tr name="1150" id="1150">
+<td>1150</td><td></td></tr>
+<tr name="1151" id="1151">
+<td>1151</td><td><span class="pp">#if</span> <a id="1151c5" class="tk">!</a><a id="1151c6" class="tk">FMSTR_POLL_DRIVEN</a> <a id="1151c24" class="tk">&amp;&amp;</a> <a id="1151c27" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="1152" id="1152">
+<td>1152</td><td></td></tr>
+<tr name="1153" id="1153">
+<td>1153</td><td>  <span class="ct">/* in the interrupt-driven JTAG mode, the JTAG RIE may have failed to be set recently */</span></td></tr>
+<tr name="1154" id="1154">
+<td>1154</td><td>  <span class="kw">if</span> (<a id="1154c7" class="tk">pcm_wFlags</a>.<a id="1154c18" class="tk">flg</a>.<a id="1154c22" class="tk">bJtagRIEPending</a>) <span class="br">{</span></td></tr>
+<tr name="1155" id="1155">
+<td>1155</td><td>    <a id="1155c5" class="tk">FMSTR_JTAG_ERXI</a>();                 <span class="ct">/* try to enable JTAG receive interrupt now */</span></td></tr>
+<tr name="1156" id="1156">
+<td>1156</td><td></td></tr>
+<tr name="1157" id="1157">
+<td>1157</td><td>    <span class="ct">/* succeeded? */</span></td></tr>
+<tr name="1158" id="1158">
+<td>1158</td><td>    <span class="kw">if</span> (<a id="1158c9" class="tk">FMSTR_JTAG_ERXI_CHECK</a>())</td></tr>
+<tr name="1159" id="1159">
+<td>1159</td><td>      <a id="1159c7" class="tk">pcm_wFlags</a>.<a id="1159c18" class="tk">flg</a>.<a id="1159c22" class="tk">bJtagRIEPending</a> = 0;<span class="ct">/* yes!, enough until it fails again (never?) */</span></td></tr>
+<tr name="1160" id="1160">
+<td>1160</td><td>  <span class="br">}</span></td></tr>
+<tr name="1161" id="1161">
+<td>1161</td><td></td></tr>
+<tr name="1162" id="1162">
+<td>1162</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1163" id="1163">
+<td>1163</td><td></td></tr>
+<tr name="1164" id="1164">
+<td>1164</td><td><span class="pp">#if</span> <a id="1164c5" class="tk">FMSTR_USE_MQX_IO</a></td></tr>
+<tr name="1165" id="1165">
+<td>1165</td><td></td></tr>
+<tr name="1166" id="1166">
+<td>1166</td><td>  <span class="ct">/* polled MQX IO mode */</span></td></tr>
+<tr name="1167" id="1167">
+<td>1167</td><td>  <a id="1167c3" class="tk">FMSTR_ProcessMQXIO</a>();</td></tr>
+<tr name="1168" id="1168">
+<td>1168</td><td></td></tr>
+<tr name="1169" id="1169">
+<td>1169</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1170" id="1170">
+<td>1170</td><td></td></tr>
+<tr name="1171" id="1171">
+<td>1171</td><td><span class="pp">#if</span> <a id="1171c5" class="tk">FMSTR_POLL_DRIVEN</a></td></tr>
+<tr name="1172" id="1172">
+<td>1172</td><td><span class="pp">#if</span> <a id="1172c5" class="tk">FMSTR_USE_SCI</a></td></tr>
+<tr name="1173" id="1173">
+<td>1173</td><td></td></tr>
+<tr name="1174" id="1174">
+<td>1174</td><td>  <span class="ct">/* polled SCI mode */</span></td></tr>
+<tr name="1175" id="1175">
+<td>1175</td><td>  <a id="1175c3" class="tk">FMSTR_ProcessSCI</a>();</td></tr>
+<tr name="1176" id="1176">
+<td>1176</td><td></td></tr>
+<tr name="1177" id="1177">
+<td>1177</td><td><span class="pp">#elif</span> <a id="1177c7" class="tk">FMSTR_USE_JTAG</a></td></tr>
+<tr name="1178" id="1178">
+<td>1178</td><td></td></tr>
+<tr name="1179" id="1179">
+<td>1179</td><td>  <span class="ct">/* polled JTAG mode */</span></td></tr>
+<tr name="1180" id="1180">
+<td>1180</td><td>  <a id="1180c3" class="tk">FMSTR_ProcessJTAG</a>();</td></tr>
+<tr name="1181" id="1181">
+<td>1181</td><td></td></tr>
+<tr name="1182" id="1182">
+<td>1182</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1183" id="1183">
+<td>1183</td><td></td></tr>
+<tr name="1184" id="1184">
+<td>1184</td><td><span class="pp">#elif</span> <a id="1184c7" class="tk">FMSTR_SHORT_INTR</a></td></tr>
+<tr name="1185" id="1185">
+<td>1185</td><td><span class="pp">#if</span> <a id="1185c5" class="tk">FMSTR_USE_USB_CDC</a></td></tr>
+<tr name="1186" id="1186">
+<td>1186</td><td></td></tr>
+<tr name="1187" id="1187">
+<td>1187</td><td>  <span class="ct">/*  */</span></td></tr>
+<tr name="1188" id="1188">
+<td>1188</td><td>  <a id="1188c3" class="tk">FMSTR_ProcessUSB</a>();</td></tr>
+<tr name="1189" id="1189">
+<td>1189</td><td></td></tr>
+<tr name="1190" id="1190">
+<td>1190</td><td><span class="pp">#elif</span> (<a id="1190c8" class="tk">FMSTR_USE_SCI</a> <a id="1190c22" class="tk">||</a> <a id="1190c25" class="tk">FMSTR_USE_JTAG</a>)</td></tr>
+<tr name="1191" id="1191">
+<td>1191</td><td></td></tr>
+<tr name="1192" id="1192">
+<td>1192</td><td>  <span class="ct">/* process queued SCI characters */</span></td></tr>
+<tr name="1193" id="1193">
+<td>1193</td><td>  <a id="1193c3" class="tk">FMSTR_RxDequeue</a>();</td></tr>
+<tr name="1194" id="1194">
+<td>1194</td><td></td></tr>
+<tr name="1195" id="1195">
+<td>1195</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1196" id="1196">
+<td>1196</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1197" id="1197">
+<td>1197</td><td></td></tr>
+<tr name="1198" id="1198">
+<td>1198</td><td><span class="br">}</span></td></tr>
+<tr name="1199" id="1199">
+<td>1199</td><td></td></tr>
+<tr name="1200" id="1200">
+<td>1200</td><td><span class="pp">#endif</span></td></tr>
+<tr name="1201" id="1201">
+<td>1201</td><td></td></tr>
+</table>
+</pre>
+</body>
+</html>
