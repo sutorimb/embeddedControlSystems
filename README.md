@@ -15,4 +15,4 @@ Learned how to use a microprocessor as a component of an embedded control system
 # Laboratory
 Develop an embedded controller for a haptic interface in C. Implemented the controller over a CAN network to study performance degradation due to networking delay. Recreated our work using rapid prototyping tools to generate C code directly from a Simulink model of the haptic virtual world.
 # Project
-Developed an adaptive cruise control system allowing diﬀerent lab groups to interact over the network and receive both visual feedback from a computer monitor as well as haptic feedback.
+Developed an adaptive cruise control system allowing diﬀerent lab groups to interact over the network and receive both visual feedback from a computer monitor as well as haptic feedback.  
